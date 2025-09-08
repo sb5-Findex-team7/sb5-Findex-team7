@@ -14,8 +14,8 @@ import java.time.LocalDate;
 public class SyncJob extends BaseUpdatableEntity {
 
   @ManyToOne
-  @JoinColumn(name = "sync_config_id")
-  private SyncConfig syncConfig;
+  @JoinColumn(name = "index_info_id")
+  private IndexInfo indexInfo;
   @Column(nullable = false, name = "job_type")
   private String jobType;
   @Column(nullable = false, name = "target_dt")

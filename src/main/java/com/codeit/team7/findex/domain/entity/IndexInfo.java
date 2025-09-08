@@ -24,4 +24,6 @@ public class IndexInfo extends BaseUpdatableEntity {
   private String sourceType;
   @Column(nullable = false, name = "favorite")
   private Boolean favorite;
+  @Column(name = "enabled")
+  private Boolean enabled;
 }
