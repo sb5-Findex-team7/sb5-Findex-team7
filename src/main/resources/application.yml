@@ -18,3 +18,5 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         physical_naming_strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
         jdbc.time_zone: UTC
+
+# 4daecd572c3bf86f7016a54b0c7779d23ef08ae92ae037535312f3b45e846500 공공데이터 secret key
