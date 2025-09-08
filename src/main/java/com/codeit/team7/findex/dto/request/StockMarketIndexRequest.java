@@ -5,8 +5,6 @@ import lombok.*;
 @Builder
 public class StockMarketIndexRequest {
 
-  private String serviceKey;
-  private String resultType;
   private Integer pageNo;
   private Integer numOfRows;
   private String basDt;

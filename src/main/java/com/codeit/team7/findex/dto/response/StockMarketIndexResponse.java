@@ -1,6 +1,9 @@
 package com.codeit.team7.findex.dto.response;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
@@ -74,40 +77,49 @@ public class StockMarketIndexResponse {
   public static class Item {
 
     @JsonProperty("basDt")
-    private String baseDate;
-
+    @JsonFormat(pattern = "yyyyMMdd")
+    private LocalDate baseDate;
     @JsonProperty("idxNm")
     private String indexName;
-
+    @JsonProperty("idxCsf")
+    private String indexClassification;
+    @JsonProperty("epyItmsCnt")
+    private Integer ItemsCount;
     @JsonProperty("clpr")
-    private String closingPrice;
-
+    private BigDecimal closingPrice;
     @JsonProperty("vs")
-    private String versus;
-
+    private BigDecimal versus;
     @JsonProperty("fltRt")
-    private String fluctuationRate;
-
+    private BigDecimal fluctuationRate;
     @JsonProperty("mkp")
-    private String marketPrice;
-
+    private BigDecimal marketPrice;
     @JsonProperty("hipr")
-    private String highPrice;
-
+    private BigDecimal highPrice;
     @JsonProperty("lopr")
-    private String lowPrice;
-
+    private BigDecimal lowPrice;
     @JsonProperty("trqu")
-    private String tradingQuantity;
-
+    private Long tradingQuantity;
     @JsonProperty("trPrc")
-    private String tradingPrice;
-
+    private Long tradingPrice;
     @JsonProperty("lstgMrktTotAmt")
-    private String marketTotalAmount;
-
-    @JsonProperty("sourceType")
-    private String sourceType;
+    private Long marketTotalAmount;
+    @JsonProperty("lsYrEdVsFltRg")
+    private BigDecimal yearEndVersusFluctuationRange;
+    @JsonProperty("yrWRcrdHgst")
+    private BigDecimal yearRecordHighest;
+    @JsonProperty("yrWRcrdHgstDt")
+    @JsonFormat(pattern = "yyyyMMdd")
+    private LocalDate yearRecordHighestDate;
+    @JsonProperty("yrWRcrdLwst")
+    private BigDecimal yearRecordLowest;
+    @JsonProperty("yrWRcrdLwstDt")
+    @JsonFormat(pattern = "yyyyMMdd")
+    private LocalDate yearRecordLowestDate;
+    @JsonProperty("basPntm")
+    @JsonFormat(pattern = "yyyyMMdd")
+    private LocalDate basePointInDate;
+    @JsonProperty("basIdx")
+    private Integer baseIndex;
   }
 }
 
