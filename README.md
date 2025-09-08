@@ -10,7 +10,7 @@
 
 
 ## 파일구조
-
+```markdown
 ├── 📂 config
 │    ├── AppConfig.java    # 앱 config 처리
 │
@@ -54,3 +54,4 @@
 │    ├── 📂 enums
 │    │    ├── MemberRole.java       # 회원 역할 Enum
 │    │    ├── SearchType.java       # 검색 타입 Enum
+```
