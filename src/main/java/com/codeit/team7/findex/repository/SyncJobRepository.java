@@ -1,10 +1,10 @@
 package com.codeit.team7.findex.repository;
 
-import com.codeit.team7.findex.domain.entity.SyncConfig;
+import com.codeit.team7.findex.domain.entity.SyncJob;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface SyncConfigRepository extends JpaRepository<SyncConfig, Long> {
+public interface SyncJobRepository extends JpaRepository<SyncJob, Long> {
 
 }

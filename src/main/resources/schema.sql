@@ -25,7 +25,7 @@ GRANT ALL PRIVILEGES ON DATABASE
 findex TO findex_user;
 
 DROP TABLE IF EXISTS sync_job CASCADE;
-DROP TABLE IF EXISTS sync_config CASCADE;
+DROP TABLE IF EXISTS sync_config CASCADE; -- 추후 제거
 DROP TABLE IF EXISTS index_data CASCADE;
 DROP TABLE IF EXISTS index_info CASCADE;
 
@@ -39,6 +39,7 @@ CREATE TABLE index_info
     bas_idx     INT,
     source_type VARCHAR(20),
     favorite    BOOLEAN,
+    enabled    BOOLEAN,
     created_at  TIMESTAMPTZ,
     updated_at  TIMESTAMPTZ
 );
@@ -65,22 +66,10 @@ CREATE TABLE index_data
         ON DELETE CASCADE
 );
 
-CREATE TABLE sync_config
-(
-    id            BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    index_info_id BIGINT NOT NULL,
-    enabled       BOOLEAN,
-    created_at    TIMESTAMPTZ,
-    updated_at    TIMESTAMPTZ,
-    CONSTRAINT fk_index_info_to_sync_config FOREIGN KEY (index_info_id)
-        REFERENCES index_info (id)
-        ON DELETE CASCADE
-);
-
 CREATE TABLE sync_job
 (
     id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    sync_config_id BIGINT      NOT NULL,
+    index_info_id BIGINT      NOT NULL,
     job_type       VARCHAR(20),
     target_dt      DATE,
     worker         VARCHAR(30) NOT NULL,
@@ -88,7 +77,7 @@ CREATE TABLE sync_job
     is_completed   BOOLEAN,
     created_at     TIMESTAMPTZ,
     updated_at     TIMESTAMPTZ,
-    CONSTRAINT fk_sync_config_to_sync_job FOREIGN KEY (sync_config_id)
-        REFERENCES sync_config (id)
+    CONSTRAINT fk_index_info_to_sync_job FOREIGN KEY (index_info_id)
+        REFERENCES index_info (id)
         ON DELETE CASCADE
 );
