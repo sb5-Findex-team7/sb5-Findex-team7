@@ -1,0 +1,77 @@
+package com.codeit.team7.findex.controller;
+
+import com.codeit.team7.findex.domain.enums.SourceType;
+import com.codeit.team7.findex.dto.command.IndexDataDto;
+import com.codeit.team7.findex.dto.request.IndexDataCreateRequest;
+import com.codeit.team7.findex.dto.request.IndexDataUpdateRequest;
+import com.codeit.team7.findex.service.IndexDataService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.util.UriComponentsBuilder;
+
+@RestController
+@RequestMapping("/api/index-data")
+@RequiredArgsConstructor
+@Tag(name = "지수 데이터 API", description = "지수 데이터 관리 API")
+public class IndexDataController {
+  private final IndexDataService indexDataService;
+
+  @PostMapping
+  @Operation(summary = "지수 데이터 등록")
+  public ResponseEntity<IndexDataDto> create(
+      @Valid @RequestBody IndexDataCreateRequest request,
+      @RequestParam("type") SourceType type,
+      UriComponentsBuilder uriBuilder) {
+
+    IndexDataDto dto = indexDataService.create(request, type);
+
+    return ResponseEntity
+        .created(uriBuilder.path("/api/index-data/{id}")
+            .buildAndExpand(dto.getId())
+            .toUri())
+        .body(dto);
+  }
+
+  @GetMapping(path = "{id}")
+  @Operation(summary = "지수 데이터 조회")
+  public ResponseEntity<IndexDataDto> findByIndexInfoId(@PathVariable Long id) {
+    IndexDataDto res = indexDataService.findByIndexInfoId(id);
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(res);
+  }
+
+
+  @PatchMapping("/{id}")
+  @Operation(summary = "지수 데이터 수정")
+  public ResponseEntity<IndexDataDto> update(@PathVariable Long id,
+      @RequestBody IndexDataUpdateRequest idur) {
+    IndexDataDto updated = indexDataService.update(id, idur);
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .body(updated);
+  }
+
+  @DeleteMapping(path = "/{id}")
+  @Operation(summary = "지수 데이터 삭제")
+  public ResponseEntity<Void> deleteById(@PathVariable Long id) {
+    indexDataService.deleteById(id);
+    return ResponseEntity
+        .status(HttpStatus.OK)
+        .build();
+  }
+
+}

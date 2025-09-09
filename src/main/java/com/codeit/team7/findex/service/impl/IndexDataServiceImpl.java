@@ -32,12 +32,12 @@ public class IndexDataServiceImpl implements IndexDataService {
     if(indexDataRepository.existsByIndexInfoIdAndBaseDate(request.getIndexInfoId(), request.getBaseDate())) {
       throw new IllegalArgumentException("이미 존재하는 값입니다.");
     }
-    IndexData e = indexDataMapper.toEntity(request);
-    e.setSourceType(type);
-    e.setIndexInfo(em.find(IndexInfo.class, request.getIndexInfoId()));
 
     IndexData entity = indexDataMapper.toEntity(request);
+
+    entity.setSourceType(type);
     entity.setIndexInfo(em.getReference(IndexInfo.class, request.getIndexInfoId()));
+
     IndexData saved = indexDataRepository.save(entity);
     return indexDataMapper.toDto(saved);
   }
