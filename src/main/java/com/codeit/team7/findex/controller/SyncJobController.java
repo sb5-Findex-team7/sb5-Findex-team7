@@ -5,16 +5,23 @@ import com.codeit.team7.findex.domain.enums.JobType;
 import com.codeit.team7.findex.domain.enums.SortedDirection;
 import com.codeit.team7.findex.domain.enums.SyncJobSortedField;
 import com.codeit.team7.findex.dto.CursorPageResponseSyncJobDto;
+import com.codeit.team7.findex.dto.SyncJobDto;
 import com.codeit.team7.findex.dto.command.GetSyncJobCommand;
 import com.codeit.team7.findex.dto.response.CursorPageResponseSyncJobResponse;
+import com.codeit.team7.findex.dto.response.StockMarketIndexResponse.Item;
+import com.codeit.team7.findex.dto.response.SyncJobResponse;
 import com.codeit.team7.findex.mapper.syncjob.SyncJobMapper;
+import com.codeit.team7.findex.service.LinkIndexInfoService;
+import com.codeit.team7.findex.service.OpenApiService;
 import com.codeit.team7.findex.service.SyncJobService;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +33,8 @@ public class SyncJobController {
 
   private final SyncJobService syncJobService;
   private final SyncJobMapper syncJobMapper;
+  private final OpenApiService openApiService;
+  private final LinkIndexInfoService linkIndexInfoService;
 
   @GetMapping
   public ResponseEntity<CursorPageResponseSyncJobResponse> getSyncJobs(
@@ -65,6 +74,17 @@ public class SyncJobController {
             .build());
 
     return ResponseEntity.ok(syncJobMapper.toCursorPageResponse(syncJobDtos));
+  }
+
+  @PostMapping("/index-infos")
+  public ResponseEntity<List<SyncJobResponse>> linkIndexInfos() {
+    // 1. OpenAPI에서 새로운 지수 정보 가져오기
+    List<Item> newIndexInfos = openApiService.GetNewIndexInfos();
+    // 2. 새로운 지수 정보들을 IndexInfo 엔티티로 변환 및 저장하고, 각각에 대해 SyncJob 생성
+    List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexInfos(newIndexInfos);
+
+    return ResponseEntity.status(202)
+        .body(syncJobDtos.stream().map(syncJobMapper::toResponse).toList());
   }
 
 }

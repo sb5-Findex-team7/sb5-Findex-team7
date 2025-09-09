@@ -30,6 +30,7 @@ public class OpenApiUtil {
   public StockMarketIndexResponse fetchStockMarketIndex(StockMarketIndexRequest request) {
 
     String url = buildStockMarketIndexUrl(request);
+    System.out.println(url);
 
     return restTemplate.getForObject(url, StockMarketIndexResponse.class);
   }
@@ -45,8 +46,8 @@ public class OpenApiUtil {
 
     if (request == null) {
       return sb.append(String.format("&pageNo=%d&numOfRows=%d", DEFAULT_PAGE_NO,
-                   DEFAULT_NUM_OF_ROWS))
-               .toString();
+              DEFAULT_NUM_OF_ROWS))
+          .toString();
     }
 
     Field[] fields = StockMarketIndexRequest.class.getDeclaredFields();
@@ -57,22 +58,22 @@ public class OpenApiUtil {
         Object value = field.get(request);
 
         if (field.getName()
-                 .equals("pageNo") && value == null) {
+            .equals("pageNo") && value == null) {
           sb.append("&")
-            .append(field.getName())
-            .append("=")
-            .append(DEFAULT_PAGE_NO);
+              .append(field.getName())
+              .append("=")
+              .append(DEFAULT_PAGE_NO);
         } else if (field.getName()
-                        .equals("numOfRows") && value == null) {
+            .equals("numOfRows") && value == null) {
           sb.append("&")
-            .append(field.getName())
-            .append("=")
-            .append(DEFAULT_NUM_OF_ROWS);
+              .append(field.getName())
+              .append("=")
+              .append(DEFAULT_NUM_OF_ROWS);
         } else if (value != null) {
           sb.append("&")
-            .append(field.getName())
-            .append("=")
-            .append(value);
+              .append(field.getName())
+              .append("=")
+              .append(value);
         }
       } catch (IllegalAccessException e) {
         // TODO 필요하면 예외처리
