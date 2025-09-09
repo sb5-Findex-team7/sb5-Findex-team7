@@ -11,8 +11,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface SyncJobRepository extends JpaRepository<SyncJob, Long>, SyncJobQueryRepository {
 
-  Optional<SyncJob> findFirstByJobTimeBetweenAndJobType(Instant startTime, Instant endTime,
-      String jobType);
+  Optional<SyncJob> findFirstByJobTimeBetweenAndJobTypeAndWorkerNot(Instant startTime,
+      Instant endTime,
+      String jobType, String worker);
 
   @EntityGraph(attributePaths = {"indexInfo.id"})
   List<SyncJob> findAllByJobTimeBetweenAndJobType(Instant startTime, Instant endTime,

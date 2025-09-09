@@ -17,6 +17,7 @@ import java.time.ZoneId;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +29,7 @@ public class OpenApiServiceImpl implements OpenApiService {
 
 
   @Override
+  @Transactional(readOnly = true)
   public GetNewIndexInfosResult GetNewIndexInfos() {
 
     LocalDate today = LocalDate.now();
@@ -42,11 +44,13 @@ public class OpenApiServiceImpl implements OpenApiService {
     Instant startOfToday2 = today.atStartOfDay(ZoneId.systemDefault()).toInstant();
 
     SyncJob indexInfoJobToday = syncJobRepository
-        .findFirstByJobTimeBetweenAndJobType(startOfToday, startOfTomorrow, INDEX_INFO.name())
+        .findFirstByJobTimeBetweenAndJobTypeAndWorkerNot
+            (startOfToday, startOfTomorrow, INDEX_INFO.name(), "system")
         .orElse(null);
 
     SyncJob indexInfoJobYesterday = syncJobRepository
-        .findFirstByJobTimeBetweenAndJobType(startOfYesterday, startOfToday2, INDEX_INFO.name())
+        .findFirstByJobTimeBetweenAndJobTypeAndWorkerNot
+            (startOfYesterday, startOfToday2, INDEX_INFO.name(), "system")
         .orElse(null);
 
     // return 1 이미 Today 데이터가 존재하는 경우
@@ -56,7 +60,7 @@ public class OpenApiServiceImpl implements OpenApiService {
           .BaseDate(today)
           .items(List.of())
           .build();
-    } // return 2 이미 YesterDay 데이터가 존재하는 경우  (Today 데이터 가져와야함)
+    } // return 2 이미 Yesterday 데이터가 존재하는 경우  (Today 데이터 가져와야함)
     else if (indexInfoJobYesterday != null) {
 
       List<Item> items = getNewIndexInfosByBaseDate(today);
