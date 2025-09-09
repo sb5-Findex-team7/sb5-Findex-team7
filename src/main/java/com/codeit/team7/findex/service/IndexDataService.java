@@ -1,0 +1,17 @@
+package com.codeit.team7.findex.service;
+
+import com.codeit.team7.findex.domain.enums.SourceType;
+import com.codeit.team7.findex.dto.command.IndexDataDto;
+import com.codeit.team7.findex.dto.request.IndexDataCreateRequest;
+import com.codeit.team7.findex.dto.request.IndexDataUpdateRequest;
+
+public interface IndexDataService {
+
+  IndexDataDto create(IndexDataCreateRequest request, SourceType openApi);
+
+  IndexDataDto findByIndexInfoId(Long indexInfoId);
+
+  IndexDataDto update(Long id, IndexDataUpdateRequest request);
+
+  void deleteById(Long id);
+}
