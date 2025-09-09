@@ -8,9 +8,11 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
+import lombok.Getter;
 
 @Entity
 @Table(name = "sync_job")
+@Getter
 public class SyncJob extends BaseUpdatableEntity {
 
   @ManyToOne

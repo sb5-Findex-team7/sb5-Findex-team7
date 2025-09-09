@@ -1,5 +1,6 @@
 package com.codeit.team7.findex.domain.enums;
 
-public enum JobType {
-  INDEX_INFO, INDEX_DATA
+public enum SortedDirection {
+  asc, desc
+
 }
