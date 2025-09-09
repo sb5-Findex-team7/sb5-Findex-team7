@@ -29,8 +29,8 @@ public class SyncJobServiceImpl implements SyncJobService {
   @Transactional(readOnly = true)
   public CursorPageResponseSyncJobDto getSyncJobList(GetSyncJobCommand getSyncJobCommand) {
 
-    boolean status =
-        getSyncJobCommand.getStatus() != null && getSyncJobCommand.getStatus() == SUCCESS;
+    Boolean status = getSyncJobCommand.getStatus() == null ? null :
+        getSyncJobCommand.getStatus() == SUCCESS;
 
     PaginatedResult<SyncJob> syncJobs = syncJobRepository.searchSyncJob(
         getSyncJobCommand.getJobType(),
