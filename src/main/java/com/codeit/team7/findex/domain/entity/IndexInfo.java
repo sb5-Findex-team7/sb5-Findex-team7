@@ -4,6 +4,7 @@ import com.codeit.team7.findex.domain.entity.base.BaseUpdatableEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
@@ -19,7 +20,7 @@ public class IndexInfo extends BaseUpdatableEntity {
   @Column(nullable = false, name = "bas_pntm")
   private LocalDate basePointInTime;
   @Column(nullable = false, name = "bas_idx")
-  private Integer baseIndex;
+  private BigDecimal baseIndex;
   @Column(nullable = false, name = "source_type")
   private String sourceType;
   @Column(nullable = false, name = "favorite")
