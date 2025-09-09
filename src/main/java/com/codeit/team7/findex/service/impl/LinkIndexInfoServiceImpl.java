@@ -5,7 +5,7 @@ import static com.codeit.team7.findex.domain.enums.SourceType.OPEN_API;
 
 import com.codeit.team7.findex.domain.entity.IndexInfo;
 import com.codeit.team7.findex.domain.entity.SyncJob;
-import com.codeit.team7.findex.dto.GetNewIndexInfosResult;
+import com.codeit.team7.findex.dto.LinkIndexInfosDto;
 import com.codeit.team7.findex.dto.SyncJobDto;
 import com.codeit.team7.findex.dto.response.StockMarketIndexResponse.Item;
 import com.codeit.team7.findex.repository.IndexInfoRepository;
@@ -16,6 +16,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -32,9 +33,10 @@ public class LinkIndexInfoServiceImpl implements LinkIndexInfoService {
 
   @Override
   @Transactional
-  public List<SyncJobDto> LinkIndexInfos(GetNewIndexInfosResult getNewIndexInfosResult) {
-    List<Item> newIndexInfos = getNewIndexInfosResult.getItems();
-    LocalDate baseDate = getNewIndexInfosResult.getBaseDate();
+  public List<SyncJobDto> LinkIndexInfos(LinkIndexInfosDto dto) {
+    List<Item> newIndexInfos = dto.getItems();
+    LocalDate baseDate = dto.getBaseDate();
+    String workerIp = Optional.ofNullable(dto.getIp()).orElse("unknown");
     if (!newIndexInfos.isEmpty()) {
       // 1. 기존 IndexInfo 데이터 가져오기
       List<IndexInfo> existingIndexInfos = indexInfoRepository.findAllByIndexClassificationIn(
@@ -82,7 +84,7 @@ public class LinkIndexInfoServiceImpl implements LinkIndexInfoService {
               .jobType(INDEX_INFO.name())
               .targetDate(
                   ii.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate())
-              .worker("system") // todo 시스템 작업자 ip도 넣어야함
+              .worker(workerIp)
               .jobTime(Instant.now())
               .isCompleted(true)
               .build()

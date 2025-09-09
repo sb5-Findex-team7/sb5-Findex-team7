@@ -24,7 +24,7 @@ public class OpenApiServiceImpl implements OpenApiService {
 
   private final OpenApiUtil openApiUtil;
   private final SyncJobRepository syncJobRepository;
-  private static final int MAX_ITEMS = 50;
+  private static final int MAX_ITEMS = 200;
 
 
   @Override

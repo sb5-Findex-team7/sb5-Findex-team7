@@ -6,6 +6,7 @@ import com.codeit.team7.findex.domain.enums.SortedDirection;
 import com.codeit.team7.findex.domain.enums.SyncJobSortedField;
 import com.codeit.team7.findex.dto.CursorPageResponseSyncJobDto;
 import com.codeit.team7.findex.dto.GetNewIndexInfosResult;
+import com.codeit.team7.findex.dto.LinkIndexInfosDto;
 import com.codeit.team7.findex.dto.SyncJobDto;
 import com.codeit.team7.findex.dto.command.GetSyncJobCommand;
 import com.codeit.team7.findex.dto.response.CursorPageResponseSyncJobResponse;
@@ -14,6 +15,7 @@ import com.codeit.team7.findex.mapper.syncjob.SyncJobMapper;
 import com.codeit.team7.findex.service.LinkIndexInfoService;
 import com.codeit.team7.findex.service.OpenApiService;
 import com.codeit.team7.findex.service.SyncJobService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -77,13 +79,23 @@ public class SyncJobController {
   }
 
   @PostMapping("/index-infos")
-  public ResponseEntity<List<SyncJobResponse>> linkIndexInfos() {
-    // 1. 오늘 데이터까지 가져온 적이 있는지 확인
+  public ResponseEntity<List<SyncJobResponse>> linkIndexInfos(HttpServletRequest request) {
+    String ip = request.getHeader("X-Forwarded-For");
+    if (ip != null && !ip.isEmpty()) {
+      ip = ip.split(",")[0].trim(); // 프록시를 거쳐온 경우 첫 번째 IP 사용
+    } else {
+      ip = request.getRemoteAddr(); // 직접 접속한 경우
+    }
 
     // 1. OpenAPI에서 새로운 지수 정보 가져오기
     GetNewIndexInfosResult getNewIndexInfosResult = openApiService.GetNewIndexInfos();
     // 2. 새로운 지수 정보들을 IndexInfo 엔티티로 변환 및 저장하고, 각각에 대해 SyncJob 생성
-    List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexInfos(getNewIndexInfosResult);
+    List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexInfos(LinkIndexInfosDto.builder()
+        .items(getNewIndexInfosResult.getItems())
+        .BaseDate(getNewIndexInfosResult.getBaseDate())
+        .isToUpdate(getNewIndexInfosResult.isToUpdate())
+        .ip(ip)
+        .build());
 
     return ResponseEntity.status(202)
         .body(syncJobDtos.stream().map(syncJobMapper::toResponse).toList());
