@@ -8,7 +8,9 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "index_data")
 public class IndexData extends BaseUpdatableEntity {

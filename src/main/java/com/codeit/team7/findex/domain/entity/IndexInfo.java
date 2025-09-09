@@ -5,7 +5,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
+import lombok.Getter;
 
+@Getter
 @Entity
 @Table(name = "index_info")
 public class IndexInfo extends BaseUpdatableEntity {
