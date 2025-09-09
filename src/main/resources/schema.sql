@@ -24,7 +24,6 @@ GRANT ALL PRIVILEGES ON DATABASE
 findex TO findex_user;
 
 DROP TABLE IF EXISTS sync_job CASCADE;
-DROP TABLE IF EXISTS sync_config CASCADE; -- 추후 제거
 DROP TABLE IF EXISTS index_data CASCADE;
 DROP TABLE IF EXISTS index_info CASCADE;
 
@@ -35,7 +34,7 @@ CREATE TABLE index_info
     idx_nm      VARCHAR(200),
     itms_cnt    INT,
     bas_pntm    DATE,
-    bas_idx     INT,
+    bas_idx     NUMERIC,
     source_type VARCHAR(20),
     favorite    BOOLEAN,
     enabled    BOOLEAN,
