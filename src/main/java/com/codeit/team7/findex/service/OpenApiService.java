@@ -1,9 +1,9 @@
 package com.codeit.team7.findex.service;
 
-import com.codeit.team7.findex.dto.response.StockMarketIndexResponse.Item;
-import java.util.List;
+import com.codeit.team7.findex.dto.GetNewIndexInfosResult;
 
 public interface OpenApiService {
 
-  List<Item> GetNewIndexInfos();
+  GetNewIndexInfosResult GetNewIndexInfos();
+
 }

@@ -5,10 +5,10 @@ import com.codeit.team7.findex.domain.enums.JobType;
 import com.codeit.team7.findex.domain.enums.SortedDirection;
 import com.codeit.team7.findex.domain.enums.SyncJobSortedField;
 import com.codeit.team7.findex.dto.CursorPageResponseSyncJobDto;
+import com.codeit.team7.findex.dto.GetNewIndexInfosResult;
 import com.codeit.team7.findex.dto.SyncJobDto;
 import com.codeit.team7.findex.dto.command.GetSyncJobCommand;
 import com.codeit.team7.findex.dto.response.CursorPageResponseSyncJobResponse;
-import com.codeit.team7.findex.dto.response.StockMarketIndexResponse.Item;
 import com.codeit.team7.findex.dto.response.SyncJobResponse;
 import com.codeit.team7.findex.mapper.syncjob.SyncJobMapper;
 import com.codeit.team7.findex.service.LinkIndexInfoService;
@@ -78,10 +78,12 @@ public class SyncJobController {
 
   @PostMapping("/index-infos")
   public ResponseEntity<List<SyncJobResponse>> linkIndexInfos() {
+    // 1. 오늘 데이터까지 가져온 적이 있는지 확인
+
     // 1. OpenAPI에서 새로운 지수 정보 가져오기
-    List<Item> newIndexInfos = openApiService.GetNewIndexInfos();
+    GetNewIndexInfosResult getNewIndexInfosResult = openApiService.GetNewIndexInfos();
     // 2. 새로운 지수 정보들을 IndexInfo 엔티티로 변환 및 저장하고, 각각에 대해 SyncJob 생성
-    List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexInfos(newIndexInfos);
+    List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexInfos(getNewIndexInfosResult);
 
     return ResponseEntity.status(202)
         .body(syncJobDtos.stream().map(syncJobMapper::toResponse).toList());

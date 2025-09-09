@@ -30,7 +30,6 @@ public class OpenApiUtil {
   public StockMarketIndexResponse fetchStockMarketIndex(StockMarketIndexRequest request) {
 
     String url = buildStockMarketIndexUrl(request);
-    System.out.println(url);
 
     return restTemplate.getForObject(url, StockMarketIndexResponse.class);
   }

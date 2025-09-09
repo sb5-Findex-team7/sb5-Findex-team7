@@ -8,11 +8,17 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "sync_job")
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class SyncJob extends BaseUpdatableEntity {
 
   @ManyToOne
