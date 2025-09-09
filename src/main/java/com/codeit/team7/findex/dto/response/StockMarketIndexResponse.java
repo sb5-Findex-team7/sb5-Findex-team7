@@ -119,7 +119,7 @@ public class StockMarketIndexResponse {
     @JsonFormat(pattern = "yyyyMMdd")
     private LocalDate basePointInDate;
     @JsonProperty("basIdx")
-    private Integer baseIndex;
+    private BigDecimal baseIndex;
   }
 }
 
