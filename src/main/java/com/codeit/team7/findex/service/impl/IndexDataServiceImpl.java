@@ -3,16 +3,27 @@ package com.codeit.team7.findex.service.impl;
 import com.codeit.team7.findex.domain.entity.IndexData;
 import com.codeit.team7.findex.domain.entity.IndexInfo;
 import com.codeit.team7.findex.domain.enums.SourceType;
+import com.codeit.team7.findex.dto.IndexDataScrollRequest;
 import com.codeit.team7.findex.dto.command.IndexDataDto;
 import com.codeit.team7.findex.dto.request.IndexDataCreateRequest;
 import com.codeit.team7.findex.dto.request.IndexDataUpdateRequest;
+import com.codeit.team7.findex.dto.response.CursorPageResponseIndexDataDto;
 import com.codeit.team7.findex.mapper.IndexDataMapper;
+import com.codeit.team7.findex.repository.IndexDataQueryRepository;
 import com.codeit.team7.findex.repository.IndexDataRepository;
 import com.codeit.team7.findex.service.IndexDataService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +33,7 @@ public class IndexDataServiceImpl implements IndexDataService {
 
   private final IndexDataRepository indexDataRepository;
   private final IndexDataMapper indexDataMapper;
+  private final IndexDataQueryRepository indexDataQueryRepository;
 
 
   @PersistenceContext
@@ -72,5 +84,47 @@ public class IndexDataServiceImpl implements IndexDataService {
   @Transactional
   public void deleteById(Long id) {
     indexDataRepository.deleteById(id);
+  }
+
+  @Transactional(readOnly = true)
+  public CursorPageResponseIndexDataDto getIndexData(IndexDataScrollRequest request) {
+    if (request.getIndexInfoId() == null) {
+      throw new IllegalArgumentException("ID는 필수 값입니다.");
+    }
+    LocalDate startDate = request.getStartTime() != null ? request.getStartTime().toLocalDate() : null;
+    LocalDate endDate = request.getEndTime() != null ? request.getEndTime().toLocalDate() : null;
+    int size = request.pageSizeOrDefault();
+
+    List<IndexData> rows = indexDataQueryRepository.fetchPage(
+        request.getIndexInfoId(),
+        startDate,
+        endDate,
+        request.getIdAfter(),
+        request.sortFieldOrDefault(),
+        request.sortDirectionOrDefault(),
+        size
+    );
+
+    boolean hasNext = rows.size() > size;
+    if(hasNext) rows = rows.subList(0, size);
+
+    List<IndexDataDto> content = rows.stream()
+        .map(indexDataMapper::toDto)
+        .toList();
+    Long nextIdAfter = rows.isEmpty() ? null : rows.get(rows.size() -1).getId();
+
+    LocalDateTime nextCursor = null;
+    if (!rows.isEmpty() && rows.get(rows.size() -1).getCreatedAt() != null) {
+      nextCursor = LocalDateTime.ofInstant(rows.get(rows.size() -1).getCreatedAt(), ZoneId.systemDefault());
+    }
+
+    return CursorPageResponseIndexDataDto.builder()
+        .content(content)
+        .nextCursor(nextCursor)
+        .nextIdAfter(nextIdAfter)
+        .size(size)
+        .totalElements(null)
+        .hasNext(hasNext)
+        .build();
   }
 }

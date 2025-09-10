@@ -1,14 +1,24 @@
 package com.codeit.team7.findex.controller;
 
+import com.codeit.team7.findex.domain.enums.IndexDataSortDirection;
+import com.codeit.team7.findex.domain.enums.IndexDataSortField;
 import com.codeit.team7.findex.domain.enums.SourceType;
+import com.codeit.team7.findex.dto.IndexDataScrollRequest;
 import com.codeit.team7.findex.dto.command.IndexDataDto;
 import com.codeit.team7.findex.dto.request.IndexDataCreateRequest;
 import com.codeit.team7.findex.dto.request.IndexDataUpdateRequest;
+import com.codeit.team7.findex.dto.response.CursorPageResponseIndexDataDto;
 import com.codeit.team7.findex.service.IndexDataService;
+import com.codeit.team7.findex.service.impl.IndexDataServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -28,6 +38,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Tag(name = "지수 데이터 API", description = "지수 데이터 관리 API")
 public class IndexDataController {
   private final IndexDataService indexDataService;
+  private final IndexDataServiceImpl indexDataServiceImpl;
 
   @PostMapping
   @Operation(summary = "지수 데이터 등록")
@@ -73,5 +84,40 @@ public class IndexDataController {
         .status(HttpStatus.OK)
         .build();
   }
+
+
+  @GetMapping
+  public ResponseEntity<CursorPageResponseIndexDataDto> getIndexData(
+      @RequestParam(required = false) Long indexInfoId,
+      @RequestParam(required = false) LocalDate startDate,
+      @RequestParam(required = false) LocalDate endDate,
+      @RequestParam(required = false) Long idAfter,
+      @RequestParam(required = false) String cursor,
+      @RequestParam(required = false) IndexDataSortField sortField,
+      @RequestParam(required = false) IndexDataSortDirection sortDirection,
+      @RequestParam(required = false) Integer size) {
+      int realSize = Optional.ofNullable(size)
+          .filter(s -> s > 0)
+          .orElse(10);
+
+      LocalDateTime startTime = (startDate != null) ? startDate.atStartOfDay() : null;
+      LocalDateTime endTime = (endDate != null) ? endDate.atStartOfDay() : null;
+
+      CursorPageResponseIndexDataDto res = indexDataServiceImpl.getIndexData(
+          IndexDataScrollRequest.builder()
+              .indexInfoId(indexInfoId)
+              .startTime(startTime)
+              .endTime(endTime)
+              .idAfter(idAfter)
+              .sortField(sortField)
+              .sortDirection(sortDirection)
+              .size(realSize)
+              .build()
+      );
+      return ResponseEntity.ok(res);
+  }
+
+
+
 
 }
