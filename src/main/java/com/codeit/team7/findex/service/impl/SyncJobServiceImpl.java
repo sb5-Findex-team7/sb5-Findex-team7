@@ -14,6 +14,7 @@ import com.codeit.team7.findex.service.SyncJobService;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,11 +59,14 @@ public class SyncJobServiceImpl implements SyncJobService {
 
     LocalDateTime nextCursor = null;
     Long nextIdAfter = null;
+
+    SyncJobSortedField sortedField = Optional.ofNullable(getSyncJobCommand.getSortField())
+        .orElse(SyncJobSortedField.jobTime);
     if (lastJob != null) {
       // 정렬 필드에 따라 cursor 설정
-      if (getSyncJobCommand.getSortField() == SyncJobSortedField.jobTime) {
+      if (sortedField == SyncJobSortedField.jobTime) {
         nextCursor = lastJob.getJobTime().atZone(ZoneId.systemDefault()).toLocalDateTime();
-      } else if (getSyncJobCommand.getSortField() == SyncJobSortedField.targetDate) {
+      } else if (sortedField == SyncJobSortedField.targetDate) {
         // LocalDate → Instant 변환 (예: 자정 기준)
         nextCursor = lastJob.getTargetDate().atStartOfDay(ZoneId.systemDefault()).toLocalDateTime();
       } else {

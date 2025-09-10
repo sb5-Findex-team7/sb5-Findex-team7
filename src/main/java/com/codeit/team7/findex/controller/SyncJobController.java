@@ -21,7 +21,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,11 +54,8 @@ public class SyncJobController {
       @RequestParam(required = false) LocalDateTime cursor, // 이때 커서는 datetime
       @RequestParam(required = false) SyncJobSortedField sortField,
       @RequestParam(required = false) SortedDirection sortDirection,
-      @RequestParam(required = false) Integer size
+      @RequestParam(required = false, defaultValue = "10") Integer size
   ) {
-    int realSize = Optional.ofNullable(size)
-        .filter(s -> s > 0)
-        .orElse(10);
 
     CursorPageResponseSyncJobDto syncJobDtos = syncJobService.getSyncJobList(
         GetSyncJobCommand.builder()
@@ -75,7 +71,7 @@ public class SyncJobController {
             .cursor(cursor)
             .sortField(sortField)
             .sortDirection(sortDirection)
-            .size(realSize)
+            .size(size)
             .build());
 
     return ResponseEntity.ok(syncJobMapper.toCursorPageResponse(syncJobDtos));
