@@ -4,7 +4,10 @@ import com.codeit.team7.findex.domain.entity.IndexData;
 import java.time.LocalDate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
+
+@Repository
 public interface IndexDataRepository extends JpaRepository<IndexData, Long> {
   // 카테고리
 //  List<IndexData> findBySourceType(SourceType sourceType);

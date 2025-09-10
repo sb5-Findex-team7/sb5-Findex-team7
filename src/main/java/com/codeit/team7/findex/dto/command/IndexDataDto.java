@@ -2,6 +2,7 @@ package com.codeit.team7.findex.dto.command;
 
 import com.codeit.team7.findex.domain.enums.SourceType;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,4 +26,5 @@ public class IndexDataDto {
   private Long tradingQuantity;
   private Long tradingPrice;
   private Long marketTotalAmount;
+  private Instant createdAt;
 }
