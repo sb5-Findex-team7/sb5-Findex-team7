@@ -26,9 +26,9 @@ public class IndexDataScrollRequest {
     return Math.max(1, Math.min(s, 100));
   }
   public IndexDataSortField sortFieldOrDefault() {
-    return sortField == null ? IndexDataSortField.BASE_DATE : sortField;
+    return sortField == null ? IndexDataSortField.baseDate : sortField;
   }
   public IndexDataSortDirection sortDirectionOrDefault() {
-    return sortDirection == null ? IndexDataSortDirection.DESC : sortDirection;
+    return sortDirection == null ? IndexDataSortDirection.desc : sortDirection;
   }
 }

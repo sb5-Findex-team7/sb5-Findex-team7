@@ -2,6 +2,7 @@ package com.codeit.team7.findex.dto.response;
 
 
 import com.codeit.team7.findex.dto.command.IndexDataDto;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,7 @@ import lombok.Getter;
 @Builder
 public class CursorPageResponseIndexDataDto {
   private final List<IndexDataDto> content;
+  @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
   private final LocalDateTime nextCursor;
   private final Long nextIdAfter;
   private final int size;

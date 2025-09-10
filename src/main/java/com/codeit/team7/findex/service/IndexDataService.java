@@ -9,9 +9,7 @@ import java.time.LocalDateTime;
 
 public interface IndexDataService {
 
-  IndexDataDto create(IndexDataCreateRequest request, SourceType openApi);
-
-  IndexDataDto findByIndexInfoId(Long indexInfoId);
+  IndexDataDto create(IndexDataCreateRequest request);
 
   IndexDataDto update(Long id, IndexDataUpdateRequest request);
 

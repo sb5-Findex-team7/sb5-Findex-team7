@@ -4,16 +4,16 @@ import lombok.Getter;
 
 @Getter
 public enum IndexDataSortField {
-  BASE_DATE("baseDate"),
-  MARKET_PRICE("marketPrice"),
-  CLOSING_PRICE("closingPrice"),
-  HIGH_PRICE("highPrice"),
-  LOW_PRICE("lowPrice"),
-  VERSUS("versus"),
-  FLUCTUATION_RATE("fluctuationRate"),
-  TRADING_QUANTITY("tradingQuantity"),
-  TRADING_PRICE("tradingPrice"),
-  MARKET_TOTAL_AMOUNT("marketTotalAmount");
+  baseDate("baseDate"),
+  marketPrice("marketPrice"),
+  closingPrice("closingPrice"),
+  highPrice("highPrice"),
+  lowPrice("lowPrice"),
+  versus("versus"),
+  fluctuationRate("fluctuationRate"),
+  tradingQuantity("tradingQuantity"),
+  tradingPrice("tradingPrice"),
+  marketTotalAmount("marketTotalAmount");
 
   private final String column;
   IndexDataSortField(String column) { this.column = column; }

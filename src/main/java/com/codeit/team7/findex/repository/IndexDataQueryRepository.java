@@ -18,4 +18,6 @@ public interface IndexDataQueryRepository {
       IndexDataSortDirection sortDirection,
       int size
   );
+  
+  Long countByIndexInfoId(Long indexInfoId);
 }

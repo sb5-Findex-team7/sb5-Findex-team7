@@ -40,42 +40,50 @@ public class IndexDataServiceImpl implements IndexDataService {
   private EntityManager em;
 
   @Transactional
-  public IndexDataDto create(IndexDataCreateRequest request, SourceType type) {
+  public IndexDataDto create(IndexDataCreateRequest request) {
     if(indexDataRepository.existsByIndexInfoIdAndBaseDate(request.getIndexInfoId(), request.getBaseDate())) {
       throw new IllegalArgumentException("이미 존재하는 값입니다.");
     }
 
     IndexData entity = indexDataMapper.toEntity(request);
 
-    entity.setSourceType(type);
+    entity.setSourceType(SourceType.USER);
     entity.setIndexInfo(em.getReference(IndexInfo.class, request.getIndexInfoId()));
 
     IndexData saved = indexDataRepository.save(entity);
     return indexDataMapper.toDto(saved);
   }
 
-  @Transactional(readOnly = true)
-  public IndexDataDto findByIndexInfoId(Long indexInfoId) {
-      IndexData indexData = indexDataRepository.findById(indexInfoId)
-          .orElseThrow(() -> new NoSuchElementException("아이디를 찾을 수 없습니다." + indexInfoId));
-      return indexDataMapper.toDto(indexData);
-
-  }
 
   @Transactional
   public IndexDataDto update(Long id, IndexDataUpdateRequest request) {
     IndexData indexData = indexDataRepository.findById(id)
         .orElseThrow(() -> new NoSuchElementException("아이디를 찾을 수 없습니다." + id));
 
-    indexData.setMarketPrice(request.getMarketPrice());
-    indexData.setClosingPrice(request.getClosingPrice());
-    indexData.setHighPrice(request.getHighPrice());
-    indexData.setLowPrice(request.getLowPrice());
-    indexData.setVersus(request.getVersus());
-    indexData.setFluctuationRate(request.getFluctuationRate());
-    indexData.setTradingQuantity(request.getTradingQuantity());
-    indexData.setTradingPrice(request.getTradingPrice());
-    indexData.setMarketTotalAmount(request.getMarketTotalAmount());
+    if (request.getMarketPrice() != null) {
+      indexData.setMarketPrice(request.getMarketPrice());
+    }
+    if (request.getClosingPrice() != null) {
+      indexData.setClosingPrice(request.getClosingPrice());
+    }
+    if (request.getHighPrice() != null) {
+      indexData.setHighPrice(request.getHighPrice());
+    }
+    if (request.getLowPrice() != null) {
+      indexData.setLowPrice(request.getLowPrice());
+    }
+    if (request.getVersus() != null) {
+      indexData.setVersus(request.getVersus());
+    }
+    if (request.getFluctuationRate() != null) {
+      indexData.setFluctuationRate(request.getFluctuationRate());
+    }
+    if (request.getTradingQuantity() != null) {
+      indexData.setTradingQuantity(request.getTradingQuantity());
+    }
+    if (request.getMarketTotalAmount() != null) {
+      indexData.setMarketTotalAmount(request.getMarketTotalAmount());
+    }
 
     IndexData saved = indexDataRepository.save(indexData);
     return indexDataMapper.toDto(saved);
@@ -88,12 +96,16 @@ public class IndexDataServiceImpl implements IndexDataService {
 
   @Transactional(readOnly = true)
   public CursorPageResponseIndexDataDto getIndexData(IndexDataScrollRequest request) {
-    if (request.getIndexInfoId() == null) {
-      throw new IllegalArgumentException("ID는 필수 값입니다.");
-    }
     LocalDate startDate = request.getStartTime() != null ? request.getStartTime().toLocalDate() : null;
     LocalDate endDate = request.getEndTime() != null ? request.getEndTime().toLocalDate() : null;
     int size = request.pageSizeOrDefault();
+
+    long totalElements;
+    if (request.getIndexInfoId() == null) {
+      totalElements = indexDataRepository.count();
+    } else {
+      totalElements = indexDataQueryRepository.countByIndexInfoId(request.getIndexInfoId());
+    }
 
     List<IndexData> rows = indexDataQueryRepository.fetchPage(
         request.getIndexInfoId(),
@@ -123,7 +135,7 @@ public class IndexDataServiceImpl implements IndexDataService {
         .nextCursor(nextCursor)
         .nextIdAfter(nextIdAfter)
         .size(size)
-        .totalElements(null)
+        .totalElements(totalElements)
         .hasNext(hasNext)
         .build();
   }
