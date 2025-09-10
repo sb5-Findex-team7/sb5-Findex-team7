@@ -27,6 +27,13 @@ public interface SyncJobRepository extends JpaRepository<SyncJob, Long>, SyncJob
       String jobType);
 
 
+  Optional<SyncJob> findTopByTargetDateAndWorkerAndJobType(
+      LocalDate targetDate, String worker, String jobType);
+
+  //
+  List<SyncJob> findAllByTargetDateAndWorkerAndJobType(
+      LocalDate targetDate, String worker, String jobType);
+
   @Query("""
       SELECT sj
       FROM SyncJob sj

@@ -10,5 +10,5 @@ public interface IndexInfoRepository extends JpaRepository<IndexInfo, Long> {
 
   List<IndexInfo> findAllByIdIn(List<Long> ids);
 
-  ;
+  List<IndexInfo> findAllByEnabled(Boolean enabled);
 }
