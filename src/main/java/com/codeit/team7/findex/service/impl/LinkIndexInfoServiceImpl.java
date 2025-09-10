@@ -1,13 +1,16 @@
 package com.codeit.team7.findex.service.impl;
 
+import static com.codeit.team7.findex.domain.enums.JobType.INDEX_DATA;
 import static com.codeit.team7.findex.domain.enums.JobType.INDEX_INFO;
 import static com.codeit.team7.findex.domain.enums.SourceType.OPEN_API;
 
+import com.codeit.team7.findex.domain.entity.IndexData;
 import com.codeit.team7.findex.domain.entity.IndexInfo;
 import com.codeit.team7.findex.domain.entity.SyncJob;
 import com.codeit.team7.findex.dto.LinkIndexInfosDto;
 import com.codeit.team7.findex.dto.SyncJobDto;
 import com.codeit.team7.findex.dto.response.StockMarketIndexResponse.Item;
+import com.codeit.team7.findex.repository.IndexDataRepository;
 import com.codeit.team7.findex.repository.IndexInfoRepository;
 import com.codeit.team7.findex.repository.SyncJobRepository;
 import com.codeit.team7.findex.service.LinkIndexDataDto;
@@ -15,6 +18,7 @@ import com.codeit.team7.findex.service.LinkIndexInfoService;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -29,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class LinkIndexInfoServiceImpl implements LinkIndexInfoService {
 
   private final IndexInfoRepository indexInfoRepository;
+  private final IndexDataRepository indexDataRepository;
   private final SyncJobRepository syncJobRepository;
 
 
@@ -108,7 +113,75 @@ public class LinkIndexInfoServiceImpl implements LinkIndexInfoService {
   }
 
   @Override
+  @Transactional
   public List<SyncJobDto> LinkIndexData(LinkIndexDataDto dto) {
-    return List.of();
+    Map<Long, List<Item>> items = dto.getItems();
+    LocalDate baseFromDate = dto.getBaseFromDate();
+    LocalDate baseToDate = dto.getBaseToDate();
+    String workerIp = Optional.ofNullable(dto.getIp()).orElse("unknown");
+    if (!isMapValuesEmpty(items)) {
+      // 1. 기존 IndexData IndexInfos 가져오기
+      List<Long> infoIds = items.keySet().stream().toList();
+      Map<Long, IndexInfo> existingIndexInfos = indexInfoRepository.findAllByIdIn(infoIds)
+          .stream()
+          .collect(Collectors.toMap(IndexInfo::getId, Function.identity()));
+      List<IndexData> existingIndexData = indexDataRepository
+          .findAllByIndexInfoIdInAndBaseDateBetween(infoIds, baseFromDate, baseToDate);
+
+      // 2. 새로운 Index Data
+      List<IndexData> newIndexDataList = new ArrayList<>();
+      List<SyncJob> newSyncJobs = new ArrayList<>();
+
+      infoIds.forEach(infoId ->
+          {
+            items.get(infoId).forEach(item -> {
+              boolean exists = existingIndexData.stream().anyMatch(indexData ->
+                  indexData.getIndexInfo().getId().equals(infoId)
+                      && indexData.getBaseDate().equals(item.getBaseDate())
+              );
+              if (!exists) {
+                // 2. IndexData 삽입
+                IndexData newIndexData = IndexData.builder()
+                    .indexInfo(existingIndexInfos.get(infoId))
+                    .baseDate(item.getBaseDate())
+                    .closingPrice(item.getClosingPrice())
+                    .marketPrice(item.getMarketPrice())
+                    .highPrice(item.getHighPrice())
+                    .lowPrice(item.getLowPrice())
+                    .fluctuationRate(item.getFluctuationRate())
+                    .build();
+                newIndexDataList.add(newIndexData);
+
+                // 3. syncJob 생성
+                newSyncJobs.add(SyncJob.builder()
+                    .indexInfo(existingIndexInfos.get(infoId))
+                    .jobType(INDEX_DATA.name())
+                    .targetDate(item.getBaseDate())
+                    .worker(workerIp)
+                    .jobTime(Instant.now())
+                    .isCompleted(true)
+                    .build()
+                );
+              }
+            });
+          }
+      );
+
+      // 일괄 저장
+      indexDataRepository.saveAll(newIndexDataList);
+      syncJobRepository.saveAll(newSyncJobs);
+    }
+
+    return syncJobRepository.findAllByTargetDateBetweenAndJobType(
+            baseFromDate,
+            baseToDate,
+            INDEX_DATA.name())
+        .stream().map(SyncJobDto::new)
+        .toList();
   }
+
+  private boolean isMapValuesEmpty(Map<Long, List<Item>> map) {
+    return map == null || map.values().stream().flatMap(List::stream).toList().isEmpty();
+  }
+
 }

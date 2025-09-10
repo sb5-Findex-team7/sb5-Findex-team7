@@ -14,7 +14,6 @@ import com.codeit.team7.findex.dto.request.LinkIndexDataRequest;
 import com.codeit.team7.findex.dto.response.CursorPageResponseSyncJobResponse;
 import com.codeit.team7.findex.dto.response.SyncJobResponse;
 import com.codeit.team7.findex.mapper.syncjob.SyncJobMapper;
-import com.codeit.team7.findex.service.LinkIndexDataDto;
 import com.codeit.team7.findex.service.LinkIndexInfoService;
 import com.codeit.team7.findex.service.OpenApiService;
 import com.codeit.team7.findex.service.SyncJobService;
@@ -109,12 +108,8 @@ public class SyncJobController {
     GetNewIndexDataResult result = openApiService.getNewIndexData(syncJobMapper.toCommand(reqBody));
 
     // 2. 새로운 지수 정보들을 IndexData 엔티티로 변환 및 저장하고, 각각에 대해 SyncJob 생성
-    List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexData(LinkIndexDataDto.builder()
-        .items(result.getItems())
-        .baseFromDate(result.getBaseFromDate())
-        .isToUpdate(result.isToUpdate())
-        .ip(ip)
-        .build());
+    List<SyncJobDto> syncJobDtos =
+        linkIndexInfoService.LinkIndexData(syncJobMapper.toDto(result, ip));
 
     return ResponseEntity.status(202)
         .body(syncJobDtos.stream().map(syncJobMapper::toResponse).toList());

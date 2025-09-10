@@ -135,6 +135,7 @@ public class OpenApiServiceImpl implements OpenApiService {
         ));
 
     return GetNewIndexDataResult.builder()
+        .items(IndexInfoId2items)
         .isToUpdate(true)
         .baseFromDate(baseFromDate)
         .baseToDate(baseToDate)
@@ -151,7 +152,9 @@ public class OpenApiServiceImpl implements OpenApiService {
         && response.getResponse() != null
         && response.getResponse().getBody() != null
         && response.getResponse().getBody().getItems() != null
+        && response.getResponse().getBody().getItems().getItem() != null
     ) {
+
       return response.getResponse().getBody().getItems().getItem();
     } else {
       throw new RuntimeException("OpenAPI Response value is NULL");
@@ -160,11 +163,11 @@ public class OpenApiServiceImpl implements OpenApiService {
 
   private List<Item> getNewIndexInfosByRequest(StockMarketIndexRequest request) {
     StockMarketIndexResponse response = openApiUtil.fetchStockMarketIndex(request);
-    System.out.println("connection");
     if (response != null
         && response.getResponse() != null
         && response.getResponse().getBody() != null
         && response.getResponse().getBody().getItems() != null
+        && response.getResponse().getBody().getItems().getItem() != null
     ) {
       return response.getResponse().getBody().getItems().getItem();
     } else {

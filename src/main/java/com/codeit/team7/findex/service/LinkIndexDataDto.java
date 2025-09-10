@@ -14,7 +14,7 @@ import lombok.Getter;
 public class LinkIndexDataDto {
 
   Map<Long, List<Item>> items;
-  boolean isToUpdate;
+  Boolean isToUpdate;
   LocalDate baseFromDate;
   LocalDate baseToDate;
   String ip;

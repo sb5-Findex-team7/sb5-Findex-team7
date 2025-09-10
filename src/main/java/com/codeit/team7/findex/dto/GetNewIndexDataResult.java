@@ -14,7 +14,7 @@ import lombok.Getter;
 public class GetNewIndexDataResult {
 
   Map<Long, List<Item>> items;
-  boolean isToUpdate;
+  Boolean isToUpdate;
   LocalDate baseFromDate;
   LocalDate baseToDate;
 }
