@@ -8,4 +8,6 @@ public interface LinkIndexInfoService {
 
   List<SyncJobDto> LinkIndexInfos(LinkIndexInfosDto linkIndexInfosDto);
 
+  List<SyncJobDto> LinkIndexData(LinkIndexDataDto dto);
+
 }

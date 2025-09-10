@@ -3,11 +3,15 @@ package com.codeit.team7.findex.service.impl;
 import static com.codeit.team7.findex.domain.enums.JobType.INDEX_INFO;
 import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
 
+import com.codeit.team7.findex.domain.entity.IndexInfo;
 import com.codeit.team7.findex.domain.entity.SyncJob;
+import com.codeit.team7.findex.dto.GetNewIndexDataResult;
 import com.codeit.team7.findex.dto.GetNewIndexInfosResult;
+import com.codeit.team7.findex.dto.command.GetNewIndexDataCommand;
 import com.codeit.team7.findex.dto.request.StockMarketIndexRequest;
 import com.codeit.team7.findex.dto.response.StockMarketIndexResponse;
 import com.codeit.team7.findex.dto.response.StockMarketIndexResponse.Item;
+import com.codeit.team7.findex.repository.IndexInfoRepository;
 import com.codeit.team7.findex.repository.SyncJobRepository;
 import com.codeit.team7.findex.service.OpenApiService;
 import com.codeit.team7.findex.util.OpenApiUtil;
@@ -15,6 +19,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,12 +33,13 @@ public class OpenApiServiceImpl implements OpenApiService {
 
   private final OpenApiUtil openApiUtil;
   private final SyncJobRepository syncJobRepository;
-  private static final int MAX_ITEMS = 200;
+  private static final int MAX_ITEMS = 400; //todo 탐구 해보기
+  private final IndexInfoRepository indexInfoRepository;
 
 
   @Override
   @Transactional(readOnly = true)
-  public GetNewIndexInfosResult GetNewIndexInfos() {
+  public GetNewIndexInfosResult getNewIndexInfos() {
 
     LocalDate today = LocalDate.now();
     LocalDate yesterday = LocalDate.now().minusDays(1);
@@ -87,6 +96,51 @@ public class OpenApiServiceImpl implements OpenApiService {
     }
   }
 
+
+  @Override
+  @Transactional(readOnly = true)
+  public GetNewIndexDataResult getNewIndexData(GetNewIndexDataCommand command) {
+    List<Long> indexInfoIds = command.getIndexInfoIds();
+    LocalDate baseFromDate = command.getBaseDateFrom();
+    LocalDate baseToDate = command.getBaseDateTo();
+
+    if (baseFromDate.isAfter(baseToDate)) {
+      throw new IllegalArgumentException("BaseFromDate cannot be after baseDateTo");
+    }
+
+    List<IndexInfo> indexInfos = indexInfoRepository.findAllByIdIn(indexInfoIds);
+    if (indexInfos.size() != indexInfoIds.size()) {
+      throw new NoSuchElementException("Invalid IndexInfo IDs");
+    }
+
+    // indexName이 겹칠 수 있음
+    Set<String> indexNames = indexInfos.stream().map(IndexInfo::getIndexName)
+        .collect(Collectors.toSet());
+
+    // 어쩔 수 없이 idxName만큼 요청을 보내야함
+    List<Item> allItems = indexNames.stream().map(indexName ->
+        getNewIndexInfosByRequest(StockMarketIndexRequest.builder()
+            .beginBasDt(baseFromDate.format(BASIC_ISO_DATE))
+            .endBasDt(baseToDate.format(BASIC_ISO_DATE))
+            .idxNm(indexName).build())
+    ).flatMap(List::stream).toList();
+
+    Map<Long, List<Item>> IndexInfoId2items = indexInfos.stream()
+        .collect(Collectors.toMap(
+            IndexInfo::getId,
+            indexInfo -> allItems.stream()
+                .filter(item -> item.getIndexName().equals(indexInfo.getIndexName())
+                    && item.getIndexClassification().equals(indexInfo.getIndexClassification()))
+                .collect(Collectors.toList())
+        ));
+
+    return GetNewIndexDataResult.builder()
+        .isToUpdate(true)
+        .baseFromDate(baseFromDate)
+        .baseToDate(baseToDate)
+        .build();
+  }
+
   private List<Item> getNewIndexInfosByBaseDate(LocalDate baseDate) {
     StockMarketIndexResponse response = openApiUtil.fetchStockMarketIndex(
         StockMarketIndexRequest.builder()
@@ -104,4 +158,17 @@ public class OpenApiServiceImpl implements OpenApiService {
     }
   }
 
+  private List<Item> getNewIndexInfosByRequest(StockMarketIndexRequest request) {
+    StockMarketIndexResponse response = openApiUtil.fetchStockMarketIndex(request);
+    System.out.println("connection");
+    if (response != null
+        && response.getResponse() != null
+        && response.getResponse().getBody() != null
+        && response.getResponse().getBody().getItems() != null
+    ) {
+      return response.getResponse().getBody().getItems().getItem();
+    } else {
+      throw new RuntimeException("OpenAPI Response value is NULL");
+    }
+  }
 }

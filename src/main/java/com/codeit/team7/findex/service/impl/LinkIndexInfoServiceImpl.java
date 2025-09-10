@@ -10,6 +10,7 @@ import com.codeit.team7.findex.dto.SyncJobDto;
 import com.codeit.team7.findex.dto.response.StockMarketIndexResponse.Item;
 import com.codeit.team7.findex.repository.IndexInfoRepository;
 import com.codeit.team7.findex.repository.SyncJobRepository;
+import com.codeit.team7.findex.service.LinkIndexDataDto;
 import com.codeit.team7.findex.service.LinkIndexInfoService;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -106,4 +107,8 @@ public class LinkIndexInfoServiceImpl implements LinkIndexInfoService {
     }
   }
 
+  @Override
+  public List<SyncJobDto> LinkIndexData(LinkIndexDataDto dto) {
+    return List.of();
+  }
 }

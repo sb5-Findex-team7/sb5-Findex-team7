@@ -7,4 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface IndexInfoRepository extends JpaRepository<IndexInfo, Long> {
 
   List<IndexInfo> findAllByIndexClassificationIn(List<String> indexClassifications);
+
+  List<IndexInfo> findAllByIdIn(List<Long> ids);
+
+  ;
 }

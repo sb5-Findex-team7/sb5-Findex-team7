@@ -5,13 +5,16 @@ import com.codeit.team7.findex.domain.enums.JobType;
 import com.codeit.team7.findex.domain.enums.SortedDirection;
 import com.codeit.team7.findex.domain.enums.SyncJobSortedField;
 import com.codeit.team7.findex.dto.CursorPageResponseSyncJobDto;
+import com.codeit.team7.findex.dto.GetNewIndexDataResult;
 import com.codeit.team7.findex.dto.GetNewIndexInfosResult;
 import com.codeit.team7.findex.dto.LinkIndexInfosDto;
 import com.codeit.team7.findex.dto.SyncJobDto;
 import com.codeit.team7.findex.dto.command.GetSyncJobCommand;
+import com.codeit.team7.findex.dto.request.LinkIndexDataRequest;
 import com.codeit.team7.findex.dto.response.CursorPageResponseSyncJobResponse;
 import com.codeit.team7.findex.dto.response.SyncJobResponse;
 import com.codeit.team7.findex.mapper.syncjob.SyncJobMapper;
+import com.codeit.team7.findex.service.LinkIndexDataDto;
 import com.codeit.team7.findex.service.LinkIndexInfoService;
 import com.codeit.team7.findex.service.OpenApiService;
 import com.codeit.team7.findex.service.SyncJobService;
@@ -24,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -80,15 +84,10 @@ public class SyncJobController {
 
   @PostMapping("/index-infos")
   public ResponseEntity<List<SyncJobResponse>> linkIndexInfos(HttpServletRequest request) {
-    String ip = request.getHeader("X-Forwarded-For");
-    if (ip != null && !ip.isEmpty()) {
-      ip = ip.split(",")[0].trim(); // 프록시를 거쳐온 경우 첫 번째 IP 사용
-    } else {
-      ip = request.getRemoteAddr(); // 직접 접속한 경우
-    }
+    String ip = getClientIp(request);
 
     // 1. OpenAPI에서 새로운 지수 정보 가져오기
-    GetNewIndexInfosResult getNewIndexInfosResult = openApiService.GetNewIndexInfos();
+    GetNewIndexInfosResult getNewIndexInfosResult = openApiService.getNewIndexInfos();
     // 2. 새로운 지수 정보들을 IndexInfo 엔티티로 변환 및 저장하고, 각각에 대해 SyncJob 생성
     List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexInfos(LinkIndexInfosDto.builder()
         .items(getNewIndexInfosResult.getItems())
@@ -100,5 +99,38 @@ public class SyncJobController {
     return ResponseEntity.status(202)
         .body(syncJobDtos.stream().map(syncJobMapper::toResponse).toList());
   }
+
+  @PostMapping("/index-data")
+  public ResponseEntity<List<SyncJobResponse>> linkIndexData(HttpServletRequest request,
+      @RequestBody LinkIndexDataRequest reqBody) {
+
+    String ip = getClientIp(request);
+    // 1. OpenAPI에서 새로운 지수 정보 가져오기
+    GetNewIndexDataResult result = openApiService.getNewIndexData(syncJobMapper.toCommand(reqBody));
+
+    // 2. 새로운 지수 정보들을 IndexData 엔티티로 변환 및 저장하고, 각각에 대해 SyncJob 생성
+    List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexData(LinkIndexDataDto.builder()
+        .items(result.getItems())
+        .baseFromDate(result.getBaseFromDate())
+        .isToUpdate(result.isToUpdate())
+        .ip(ip)
+        .build());
+
+    return ResponseEntity.status(202)
+        .body(syncJobDtos.stream().map(syncJobMapper::toResponse).toList());
+
+  }
+
+
+  private String getClientIp(HttpServletRequest request) {
+    String ip = request.getHeader("X-Forwarded-For");
+    if (ip != null && !ip.isEmpty()) {
+      ip = ip.split(",")[0].trim(); // 프록시를 거쳐온 경우 첫 번째 IP 사용
+    } else {
+      ip = request.getRemoteAddr(); // 직접 접속한 경우
+    }
+    return ip;
+  }
+
 
 }
