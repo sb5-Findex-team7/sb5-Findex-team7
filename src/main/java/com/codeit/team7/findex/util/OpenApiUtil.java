@@ -2,19 +2,18 @@ package com.codeit.team7.findex.util;
 
 import com.codeit.team7.findex.dto.request.StockMarketIndexRequest;
 import com.codeit.team7.findex.dto.response.StockMarketIndexResponse;
-import java.lang.reflect.Field;
+import java.net.URI;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.RestClient;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @RequiredArgsConstructor
 public class OpenApiUtil {
 
-  @Autowired
-  private final RestTemplate restTemplate;
+  private final RestClient restClient;
 
   @Value("${spring.openapi.service_key}")
   private String serviceKey;
@@ -29,56 +28,92 @@ public class OpenApiUtil {
 
   public StockMarketIndexResponse fetchStockMarketIndex(StockMarketIndexRequest request) {
 
-    String url = buildStockMarketIndexUrl(request);
-
-    return restTemplate.getForObject(url, StockMarketIndexResponse.class);
+    return restClient.get()
+                     .uri(buildStockMarketIndexUrl(request))
+                     .retrieve()
+                     .body(StockMarketIndexResponse.class);
   }
 
-  private String buildStockMarketIndexUrl(StockMarketIndexRequest request) {
+  private URI buildStockMarketIndexUrl(StockMarketIndexRequest request) {
 
-    StringBuilder sb = new StringBuilder();
-
-    sb.append(baseUrl);
-    sb.append(STOCK_MARKET_INDEX_URL);
-    sb.append(
-        String.format("?serviceKey=%s&resultType=%s", serviceKey, resultType));
+    UriComponentsBuilder builder = UriComponentsBuilder
+        .fromUriString(baseUrl)
+        .path(STOCK_MARKET_INDEX_URL)
+        .queryParam("serviceKey", serviceKey)
+        .queryParam("resultType", resultType);
 
     if (request == null) {
-      return sb.append(String.format("&pageNo=%d&numOfRows=%d", DEFAULT_PAGE_NO,
-              DEFAULT_NUM_OF_ROWS))
-          .toString();
+      return builder
+          .queryParam("pageNo", DEFAULT_PAGE_NO)
+          .queryParam("numOfRows", DEFAULT_NUM_OF_ROWS)
+          .build()
+          .toUri();
     }
 
-    Field[] fields = StockMarketIndexRequest.class.getDeclaredFields();
-    for (Field field : fields) {
-      try {
+    int pageNo =
+        (request.getPageNo() != null) ? request.getPageNo() : DEFAULT_PAGE_NO;
+    int numOfRows = (request.getNumOfRows() != null) ? request.getNumOfRows()
+        : DEFAULT_NUM_OF_ROWS;
 
-        field.setAccessible(true);
-        Object value = field.get(request);
+    builder.queryParam("pageNo", pageNo);
+    builder.queryParam("numOfRows", numOfRows);
 
-        if (field.getName()
-            .equals("pageNo") && value == null) {
-          sb.append("&")
-              .append(field.getName())
-              .append("=")
-              .append(DEFAULT_PAGE_NO);
-        } else if (field.getName()
-            .equals("numOfRows") && value == null) {
-          sb.append("&")
-              .append(field.getName())
-              .append("=")
-              .append(DEFAULT_NUM_OF_ROWS);
-        } else if (value != null) {
-          sb.append("&")
-              .append(field.getName())
-              .append("=")
-              .append(value);
-        }
-      } catch (IllegalAccessException e) {
-        // TODO 필요하면 예외처리
-      }
+    if (request.getBasDt() != null) {
+      builder.queryParam("basDt", request.getBasDt());
+    }
+    if (request.getBeginBasDt() != null) {
+      builder.queryParam("beginBasDt", request.getBeginBasDt());
+    }
+    if (request.getEndBasDt() != null) {
+      builder.queryParam("endBasDt", request.getEndBasDt());
+    }
+    if (request.getLikeBasDt() != null) {
+      builder.queryParam("likeBasDt", request.getLikeBasDt());
+    }
+    if (request.getIdxNm() != null) {
+      builder.queryParam("idxNm", request.getIdxNm());
+    }
+    if (request.getLikeIdxNm() != null) {
+      builder.queryParam("likeIdxNm", request.getLikeIdxNm());
+    }
+    if (request.getBeginEpyItmsCnt() != null) {
+      builder.queryParam("beginEpyItmsCnt", request.getBeginEpyItmsCnt());
+    }
+    if (request.getEndEpyItmsCnt() != null) {
+      builder.queryParam("endEpyItmsCnt", request.getEndEpyItmsCnt());
+    }
+    if (request.getBeginFltRt() != null) {
+      builder.queryParam("beginFltRt", request.getBeginFltRt());
+    }
+    if (request.getEndFltRt() != null) {
+      builder.queryParam("endFltRt", request.getEndFltRt());
+    }
+    if (request.getBeginTrqu() != null) {
+      builder.queryParam("beginTrqu", request.getBeginTrqu());
+    }
+    if (request.getEndTrqu() != null) {
+      builder.queryParam("endTrqu", request.getEndTrqu());
+    }
+    if (request.getBeginLstgMrktTotAmt() != null) {
+      builder.queryParam("beginLstgMrktTotAmt", request.getBeginLstgMrktTotAmt());
+    }
+    if (request.getEndLstgMrktTotAmt() != null) {
+      builder.queryParam("endLstgMrktTotAmt", request.getEndLstgMrktTotAmt());
+    }
+    if (request.getBeginLsYrEdVsFltRg() != null) {
+      builder.queryParam("beginLsYrEdVsFltRg", request.getBeginLsYrEdVsFltRg());
+    }
+    if (request.getEndLsYrEdVsFltRg() != null) {
+      builder.queryParam("endLsYrEdVsFltRg", request.getEndLsYrEdVsFltRg());
+    }
+    if (request.getBeginLsYrEdVsFltRt() != null) {
+      builder.queryParam("beginLsYrEdVsFltRt", request.getBeginLsYrEdVsFltRt());
+    }
+    if (request.getEndLsYrEdVsFltRt() != null) {
+      builder.queryParam("endLsYrEdVsFltRt", request.getEndLsYrEdVsFltRt());
     }
 
-    return sb.toString();
+    return builder.build()
+                  .toUri();
   }
 }
