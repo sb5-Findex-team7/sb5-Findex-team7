@@ -1,6 +1,10 @@
 package com.codeit.team7.findex.dto.response;
 
+import com.codeit.team7.findex.domain.enums.PeriodType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -20,8 +24,9 @@ public class IndexChartDto {
   @Schema(description = "지수 이름", example = "KOSPI")
   private String indexName;
 
-  @Schema(description = "기간 타입 (DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY)")
-  private String periodType;
+  @Column(nullable = false, name = "period_type")
+  @Enumerated(EnumType.STRING)
+  private PeriodType periodType;
 
   @Schema(description = "일반 데이터 포인트")
   private List<DataPoint> dataPoints;

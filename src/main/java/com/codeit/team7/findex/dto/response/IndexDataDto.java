@@ -25,9 +25,9 @@ public class IndexDataDto {
   private BigDecimal lowPrice;
   private BigDecimal versus;
   private BigDecimal fluctuationRate;
-  private BigDecimal tradingQuantity;
-  private BigDecimal tradingPrice;
-  private BigDecimal marketTotalAmount;
+  private Long tradingQuantity;
+  private Long tradingPrice;
+  private Long marketTotalAmount;
 
   @Schema(description = "데이터 출처(USER, OPEN_API)")
   private String sourceType;
