@@ -6,7 +6,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Table;
-import java.math.BigDecimal;
 import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -37,7 +36,6 @@ public class IndexInfo extends BaseUpdatableEntity {
   @Column(nullable = false, name = "bas_pntm")
   private LocalDate basePointInTime;
 
-  // 소수점 사용 -> db 타입 변경 필요
   @Column(nullable = false, name = "bas_idx")
   private BigDecimal baseIndex;
 
