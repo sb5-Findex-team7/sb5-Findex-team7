@@ -144,11 +144,16 @@ public class LinkIndexInfoServiceImpl implements LinkIndexInfoService {
                 IndexData newIndexData = IndexData.builder()
                     .indexInfo(existingIndexInfos.get(infoId))
                     .baseDate(item.getBaseDate())
-                    .closingPrice(item.getClosingPrice())
+                    .sourceType(OPEN_API.name())
                     .marketPrice(item.getMarketPrice())
+                    .closingPrice(item.getClosingPrice())
                     .highPrice(item.getHighPrice())
                     .lowPrice(item.getLowPrice())
+                    .versus(item.getVersus())
                     .fluctuationRate(item.getFluctuationRate())
+                    .tradingQuantity(item.getTradingQuantity())
+                    .tradingPrice(item.getTradingPrice())
+                    .marketTotalAmount(item.getMarketTotalAmount())
                     .build();
                 newIndexDataList.add(newIndexData);
 
