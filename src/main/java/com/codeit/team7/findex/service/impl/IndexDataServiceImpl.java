@@ -16,11 +16,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.YearMonth;
-import java.time.temporal.IsoFields;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -81,33 +78,36 @@ public class IndexDataServiceImpl implements IndexDataService {
   @Override
   public List<IndexChartDto> getChartData(Long indexInfoId, PeriodType periodType) {
 
-    List<IndexData> dailyData = indexDataRepository.findByIndexInfoIdOrderByBaseDateAsc(indexInfoId);
+    LocalDate endDate = LocalDate.now();
+    LocalDate startDate;
+    startDate = switch (periodType) {
+      case WEEKLY -> endDate.minusWeeks(1);
+      case MONTHLY -> endDate.minusMonths(1);
+      case QUARTERLY -> endDate.minusMonths(3);
+      case YEARLY -> endDate.minusYears(1);
+      default -> endDate;
+    };
 
-    if (dailyData.isEmpty()) return List.of();
-
-    List<IndexData> aggregatedData;
-    switch (periodType) {
-      case WEEKLY:
-        aggregatedData = aggregateWeekly(dailyData);
-        break;
-      case MONTHLY:
-        aggregatedData = aggregateMonthly(dailyData);
-        break;
-      default:
-        aggregatedData = dailyData;
+    List<IndexData> data = indexDataRepository.findByIndexInfoIdAndBaseDateBetweenOrderByBaseDateAsc(
+        indexInfoId, startDate, endDate);
+    if (data.isEmpty()) {
+      return List.of();
     }
 
-    List<IndexChartDto.DataPoint> dataPoints = aggregatedData.stream()
-                                                             .map(d -> IndexChartDto.DataPoint.builder()
-                                                                                              .date(d.getBaseDate())
-                                                                                              .closingPrice(d.getClosingPrice())
-                                                                                              .build())
-                                                             .toList();
+    List<IndexChartDto.DataPoint> dataPoints = data.stream()
+                                                   .map(d -> IndexChartDto.DataPoint.builder()
+                                                                                    .date(
+                                                                                        d.getBaseDate())
+                                                                                    .closingPrice(
+                                                                                        d.getClosingPrice())
+                                                                                    .build())
+                                                   .toList();
 
     List<IndexChartDto.DataPoint> ma5 = calculateMovingAverage(dataPoints, 5);
     List<IndexChartDto.DataPoint> ma20 = calculateMovingAverage(dataPoints, 20);
 
-    IndexInfo info = dailyData.get(0).getIndexInfo();
+    IndexInfo info = data.get(0)
+                         .getIndexInfo();
 
     return List.of(IndexChartDto.builder()
                                 .indexInfoId(info.getId())
@@ -120,41 +120,29 @@ public class IndexDataServiceImpl implements IndexDataService {
                                 .build());
   }
 
-  private List<IndexData> aggregateWeekly(List<IndexData> dailyData) {
-    Map<Integer, IndexData> weekMap = new LinkedHashMap<>();
-    for (IndexData d : dailyData) {
-      int week = d.getBaseDate().get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-      weekMap.put(week, d);
+  private List<IndexChartDto.DataPoint> calculateMovingAverage(List<IndexChartDto.DataPoint> points,
+      int window) {
+    if (points.size() < window) {
+      return List.of();
     }
-    return new ArrayList<>(weekMap.values());
-  }
-
-  private List<IndexData> aggregateMonthly(List<IndexData> dailyData) {
-    Map<YearMonth, IndexData> monthMap = new LinkedHashMap<>();
-    for (IndexData d : dailyData) {
-      YearMonth ym = YearMonth.from(d.getBaseDate());
-      monthMap.put(ym, d);
-    }
-    return new ArrayList<>(monthMap.values());
-  }
-
-  private List<IndexChartDto.DataPoint> calculateMovingAverage(List<IndexChartDto.DataPoint> points, int window) {
-    if (points.size() < window) return List.of();
 
     List<IndexChartDto.DataPoint> maPoints = new ArrayList<>();
     for (int i = window - 1; i < points.size(); i++) {
       BigDecimal sum = BigDecimal.ZERO;
       for (int j = i - window + 1; j <= i; j++) {
-        sum = sum.add(points.get(j).getClosingPrice());
+        sum = sum.add(points.get(j)
+                            .getClosingPrice());
       }
       BigDecimal avg = sum.divide(BigDecimal.valueOf(window), 2, RoundingMode.HALF_UP);
       maPoints.add(IndexChartDto.DataPoint.builder()
-                                          .date(points.get(i).getDate())
+                                          .date(points.get(i)
+                                                      .getDate())
                                           .closingPrice(avg)
                                           .build());
     }
     return maPoints;
   }
+
   @Override
   public List<IndexPerformanceRankDto> getPerformanceRank(PeriodType periodType, int limit) {
 
@@ -163,97 +151,157 @@ public class IndexDataServiceImpl implements IndexDataService {
 
     switch (periodType) {
       case WEEKLY -> startDate = endDate.minusDays(6);
-      case MONTHLY -> startDate = endDate.minusMonths(1).plusDays(1);
+      case MONTHLY -> startDate = endDate.minusMonths(1)
+                                         .plusDays(1);
       default -> startDate = endDate;
     }
 
-    List<IndexData> dataInRange = indexDataRepository.findAllByBaseDateBetween(startDate, endDate);
+    List<IndexData> dataInRange = indexDataRepository.findByBaseDateBetween(startDate, endDate);
 
     Map<Long, List<IndexData>> groupedByIndex = dataInRange.stream()
-                                                           .collect(Collectors.groupingBy(d -> d.getIndexInfo().getId()));
+                                                           .collect(Collectors.groupingBy(
+                                                               d -> d.getIndexInfo()
+                                                                     .getId()));
 
-    List<IndexPerformanceRankDto> rankList = groupedByIndex.values().stream()
+    List<IndexPerformanceRankDto> rankList = groupedByIndex.values()
+                                                           .stream()
                                                            .map(list -> {
-                                                             list.sort(Comparator.comparing(IndexData::getBaseDate));
-                                                             IndexData first = list.get(0);
-                                                             IndexData last = list.get(list.size() - 1);
-
-                                                             BigDecimal versus = last.getClosingPrice().subtract(first.getClosingPrice());
-                                                             BigDecimal fluctuationRate = versus
-                                                                 .divide(first.getClosingPrice(), 4, RoundingMode.HALF_UP)
-                                                                 .multiply(BigDecimal.valueOf(100));
-
-                                                             IndexInfo info = last.getIndexInfo();
-
-                                                             IndexPerformanceRankDto.IndexPerformanceDto performance =
-                                                                 IndexPerformanceRankDto.IndexPerformanceDto.builder()
-                                                                                                            .indexInfoId(info.getId())
-                                                                                                            .indexClassification(info.getIndexClassification())
-                                                                                                            .indexName(info.getIndexName())
-                                                                                                            .versus(versus)
-                                                                                                            .fluctuationRate(fluctuationRate)
-                                                                                                            .currentPrice(last.getClosingPrice())
-                                                                                                            .beforePrice(first.getClosingPrice())
-                                                                                                            .build();
-
                                                              return IndexPerformanceRankDto.builder()
-                                                                                           .performance(performance)
-                                                                                           .rank(0) // 나중에 정렬 후 rank 부여
+                                                                                           .performance(
+                                                                                               calculatePerformance(
+                                                                                                   list))
+                                                                                           .rank(
+                                                                                               0)
                                                                                            .build();
                                                            })
                                                            .sorted(Comparator.comparing(
-                                                               (IndexPerformanceRankDto r) -> r.getPerformance().getFluctuationRate()
-                                                           ).reversed())
+                                                                                 (IndexPerformanceRankDto r) -> r.getPerformance()
+                                                                                                                 .getFluctuationRate()
+                                                                             )
+                                                                             .reversed())
                                                            .limit(limit)
                                                            .collect(Collectors.toList());
 
-    // 4. 랭크 부여
     for (int i = 0; i < rankList.size(); i++) {
-      rankList.get(i).setRank(i + 1);
+      rankList.get(i)
+              .setRank(i + 1);
     }
+
+    // TODO 성능 비교 후 선택
+//    List<IndexPerformanceRankDto.IndexPerformanceDto> performanceDtoList = indexDataRepository.findIndexPerformanceBetween(
+//                                                                                                  startDate, endDate)
+//                                                                                              .stream()
+//                                                                                              .map(
+//                                                                                                  p -> IndexPerformanceRankDto.IndexPerformanceDto.builder()
+//                                                                                                                                                  .indexInfoId(
+//                                                                                                                                                      p.getIndexInfoId())
+//                                                                                                                                                  .indexClassification(
+//                                                                                                                                                      p.getIndexClassification())
+//                                                                                                                                                  .indexName(
+//                                                                                                                                                      p.getIndexName())
+//                                                                                                                                                  .versus(
+//                                                                                                                                                      p.getVersus())
+//                                                                                                                                                  .fluctuationRate(
+//                                                                                                                                                      p.getFluctuationRate())
+//                                                                                                                                                  .currentPrice(
+//                                                                                                                                                      p.getCurrentPrice())
+//                                                                                                                                                  .beforePrice(
+//                                                                                                                                                      p.getBeforePrice())
+//                                                                                                                                                  .build())
+//                                                                                              .sorted(
+//                                                                                                  Comparator.comparing(
+//                                                                                                                IndexPerformanceRankDto.IndexPerformanceDto::getFluctuationRate
+//                                                                                                            )
+//                                                                                                            .reversed())
+//                                                                                              .limit(
+//                                                                                                  limit)
+//                                                                                              .toList();
+//
+//    AtomicInteger counter = new AtomicInteger(1);
+//    return performanceDtoList.stream()
+//                             .map(p -> {
+//                               return IndexPerformanceRankDto.builder()
+//                                                             .performance(p)
+//                                                             .rank(counter.getAndIncrement())
+//                                                             .build();
+//                             })
+//                             .toList();
 
     return rankList;
   }
 
   @Override
-  public List<IndexPerformanceRankDto.IndexPerformanceDto> getFavoritePerformance(PeriodType periodType) {
+  public List<IndexPerformanceRankDto.IndexPerformanceDto> getFavoritePerformance(
+      PeriodType periodType) {
 
     LocalDate endDate = LocalDate.now();
     LocalDate startDate;
 
     switch (periodType) {
       case WEEKLY -> startDate = endDate.minusDays(6);
-      case MONTHLY -> startDate = endDate.minusMonths(1).plusDays(1);
+      case MONTHLY -> startDate = endDate.minusMonths(1)
+                                         .plusDays(1);
       default -> startDate = endDate;
     }
 
-    List<IndexData> indexDataList = indexDataRepository.findByIndexInfoIsFavoriteAndBaseDateBetween(
+    List<IndexData> indexDataList = indexDataRepository.findByIndexInfoFavoriteAndBaseDateBetween(
         true, startDate, endDate
     );
 
     Map<Long, List<IndexData>> grouped = indexDataList.stream()
-                                                      .collect(Collectors.groupingBy(data -> data.getIndexInfo().getId()));
+                                                      .collect(Collectors.groupingBy(
+                                                          data -> data.getIndexInfo()
+                                                                      .getId()));
 
-    List<IndexPerformanceRankDto.IndexPerformanceDto> performances = null;
+    // TODO 테스트 후 어느게 빠른지
+//    return  indexDataRepository.findIndexPerformanceBetweenWithFavorite(startDate, endDate)
+//                               .stream()
+//                               .map(p -> IndexPerformanceRankDto.IndexPerformanceDto.builder()
+//                                                                                    .indexInfoId(p.getIndexInfoId())
+//                                                                                    .indexClassification(p.getIndexClassification())
+//                                                                                    .indexName(p.getIndexName())
+//                                                                                    .versus(p.getVersus())
+//                                                                                    .fluctuationRate(p.getFluctuationRate())
+//                                                                                    .currentPrice(p.getCurrentPrice())
+//                                                                                    .beforePrice(p.getBeforePrice())
+//                                                                                    .build()).toList();
 
-    return performances;
+    return grouped.values()
+                  .stream()
+                  .map(
+                      this::calculatePerformance)
+                  .toList();
   }
 
   private IndexPerformanceRankDto.IndexPerformanceDto calculatePerformance(
-      List<IndexData> dataList, IndexInfo info) {
+      List<IndexData> dataList) {
 
-    dataList.sort(Comparator.comparing(IndexData::getBaseDate));
-    IndexData first = dataList.get(0);
-    IndexData last = dataList.get(dataList.size() - 1);
+    dataList.sort(
+        Comparator.comparing(
+            IndexData::getBaseDate));
+    IndexData first = dataList.get(
+        0);
+    IndexData last = dataList.get(
+        dataList.size() - 1);
 
-    BigDecimal versus = last.getClosingPrice().subtract(first.getClosingPrice());
+    BigDecimal versus = last.getClosingPrice()
+                            .subtract(
+                                first.getClosingPrice());
     BigDecimal fluctuationRate = versus
-        .divide(first.getClosingPrice(), 4, RoundingMode.HALF_UP)
-        .multiply(BigDecimal.valueOf(100));
+        .divide(
+            first.getClosingPrice(),
+            4,
+            RoundingMode.HALF_UP)
+        .multiply(
+            BigDecimal.valueOf(
+                100));
+
+    IndexInfo info = last.getIndexInfo();
 
     return IndexPerformanceRankDto.IndexPerformanceDto.builder()
                                                       .indexInfoId(info.getId())
-                                                      .indexClassification(info.getIndexClassification())
+                                                      .indexClassification(
+                                                          info.getIndexClassification())
                                                       .indexName(info.getIndexName())
                                                       .versus(versus)
                                                       .fluctuationRate(fluctuationRate)
