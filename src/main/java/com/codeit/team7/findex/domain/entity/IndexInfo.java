@@ -11,9 +11,19 @@ import jakarta.persistence.UniqueConstraint;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+@Entity
+@Getter
+@Setter
+@Builder
+@AllArgsConstructor
+// @NoArgsConstructor
+// @Table(name = "index_info")
 @Entity
 @Table(
     name = "index_info",
@@ -21,7 +31,6 @@ import lombok.NoArgsConstructor;
         @UniqueConstraint(columnNames = {"idx_csf", "idx_nm"})
     }
 )
-@Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class IndexInfo extends BaseUpdatableEntity {
 

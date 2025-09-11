@@ -1,4 +1,4 @@
-package com.codeit.team7.findex.dto.request;
+package com.codeit.team7.findex.dto.command;
 
 import com.codeit.team7.findex.domain.enums.JobStatus;
 import com.codeit.team7.findex.domain.enums.JobType;
@@ -7,13 +7,13 @@ import com.codeit.team7.findex.domain.enums.SyncJobSortedField;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
 @AllArgsConstructor
-public class SyncJobRequest {
+@Getter
+@Builder
+public class GetSyncJobCommand {
 
   private final JobType jobType;
   private final Long indexInfoId;
@@ -28,5 +28,4 @@ public class SyncJobRequest {
   private final SyncJobSortedField sortField;
   private final SortedDirection sortDirection;
   private final int size;
-
 }
