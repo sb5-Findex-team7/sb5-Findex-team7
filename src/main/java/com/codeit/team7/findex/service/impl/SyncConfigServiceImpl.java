@@ -7,6 +7,7 @@ import com.codeit.team7.findex.dto.PaginatedResult;
 import com.codeit.team7.findex.dto.PatchSyncConfigCommand;
 import com.codeit.team7.findex.dto.SyncConfigDto;
 import com.codeit.team7.findex.dto.command.GetSyncConfigCommand;
+import com.codeit.team7.findex.exception.syncConfig.NoIndexInfoException;
 import com.codeit.team7.findex.mapper.syncjob.SyncConfigMapper;
 import com.codeit.team7.findex.repository.IndexInfoRepository;
 import com.codeit.team7.findex.repository.SyncConfigRepository;
@@ -32,7 +33,10 @@ public class SyncConfigServiceImpl implements SyncConfigService {
     Boolean enabled = command.getEnabled();
 
     IndexInfo indexInfo = indexInfoRepository.findById(Id)
-        .orElseThrow(() -> new RuntimeException("IndexInfo not found with id: " + Id));
+        .orElseThrow(() -> new NoIndexInfoException(
+            "IndexInfo not found",
+            "IndexInfo not found with id: " + Id)
+        );
 
     try {
       if (enabled != null) {
@@ -45,6 +49,7 @@ public class SyncConfigServiceImpl implements SyncConfigService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public CursorPageResponseSyncConfigDto getSyncJobs(GetSyncConfigCommand command) {
     PaginatedResult<IndexInfo> syncConfigs = syncConfigRepository.searchSyncConfig(
         command.getIndexInfoId(),

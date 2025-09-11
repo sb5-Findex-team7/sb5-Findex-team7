@@ -3,25 +3,31 @@ package com.codeit.team7.findex.service.impl;
 import static com.codeit.team7.findex.domain.enums.JobType.INDEX_DATA;
 import static com.codeit.team7.findex.domain.enums.JobType.INDEX_INFO;
 import static com.codeit.team7.findex.domain.enums.SourceType.OPEN_API;
+import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
 
 import com.codeit.team7.findex.domain.entity.IndexData;
 import com.codeit.team7.findex.domain.entity.IndexInfo;
 import com.codeit.team7.findex.domain.entity.SyncJob;
+import com.codeit.team7.findex.domain.enums.JobType;
 import com.codeit.team7.findex.dto.LinkIndexInfosDto;
 import com.codeit.team7.findex.dto.SyncJobDto;
+import com.codeit.team7.findex.dto.request.StockMarketIndexRequest;
+import com.codeit.team7.findex.dto.response.StockMarketIndexResponse;
 import com.codeit.team7.findex.dto.response.StockMarketIndexResponse.Item;
 import com.codeit.team7.findex.repository.IndexDataRepository;
 import com.codeit.team7.findex.repository.IndexInfoRepository;
 import com.codeit.team7.findex.repository.SyncJobRepository;
 import com.codeit.team7.findex.service.LinkIndexDataDto;
 import com.codeit.team7.findex.service.LinkIndexInfoService;
+import com.codeit.team7.findex.util.OpenApiUtil;
+import com.codeit.team7.findex.util.StockDateUtil;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -36,80 +42,77 @@ public class LinkIndexInfoServiceImpl implements LinkIndexInfoService {
   private final IndexDataRepository indexDataRepository;
   private final SyncJobRepository syncJobRepository;
 
+  private final OpenApiUtil openApiUtil;
+
+  private final StockDateUtil stockDateUtil;
+
+  private static final int MAX_ITEMS = 400; //todo 탐구 해보기
+
 
   @Override
   @Transactional
   public List<SyncJobDto> LinkIndexInfos(LinkIndexInfosDto dto) {
-    List<Item> newIndexInfos = dto.getItems();
-    LocalDate baseDate = dto.getBaseDate();
-    String workerIp = Optional.ofNullable(dto.getIp()).orElse("unknown");
-    if (!newIndexInfos.isEmpty()) {
-      // 1. 기존 IndexInfo 데이터 가져오기
-      List<IndexInfo> existingIndexInfos = indexInfoRepository.findAllByIndexClassificationIn(
-          newIndexInfos.stream()
-              .map(Item::getIndexClassification)
-              .collect(Collectors.toList())
+    final String workerIP = Optional.ofNullable(dto.getIp())
+        .orElse("unknown" + UUID.randomUUID());
+
+    LocalDate targetDate = stockDateUtil.getLatestDate();
+    SyncJob syncJob = syncJobRepository.findTopByTargetDateAndWorkerNotAndJobType(targetDate,
+        "system",
+        INDEX_INFO.name()).orElse(null);
+
+    if (syncJob == null) {
+      // 새로운 데이터 insert
+      List<IndexInfo> indexInfos = indexInfoRepository.findAll();
+
+      // 지수는 classificationName+IndexName 으로 식별이 가능함
+      //EX) key -> KRX 시리즈+KRX 100 value -> IndexInfo 인스턴스
+      Map<String, IndexInfo> targetInfosMap = indexInfos.stream().collect(Collectors.toMap(
+          ii -> ii.getIndexName() + ii.getIndexClassification(), Function.identity()
+      ));
+
+      // API 호출 결과 Map
+      Map<String, Item> newDataMap = getNewIndexInfosByBaseDate(targetDate)
+          .stream().collect(Collectors.toMap(
+              item -> item.getIndexName() + item.getIndexClassification(), Function.identity()
+          ));
+
+      newDataMap.keySet().forEach(
+          k -> {
+            boolean exist = targetInfosMap.get(k) != null;
+
+            if (exist) {
+
+              Item newInfo = newDataMap.get(k);
+              IndexInfo targetEntity = targetInfosMap.get(k);
+
+              targetEntity.setItemCount(newInfo.getItemsCount());
+              targetEntity.setBasePointInTime(newInfo.getBasePointInDate());
+              targetEntity.setBaseIndex(newInfo.getBaseIndex());
+            }
+          }
       );
 
-      // 2. 기존 데이터 맵핑
-      Map<String, IndexInfo> existingIndexInfoMap = existingIndexInfos.stream()
-          .collect(Collectors.toMap(IndexInfo::getIndexClassification, Function.identity()));
+      List<IndexInfo> updatedEntities = targetInfosMap.values().stream().toList();
+      indexInfoRepository.saveAll(updatedEntities);
 
-      // 3. 새로운 데이터와 비교하여 업데이트 또는 삽입
-      for (Item newItem : newIndexInfos) {
-        IndexInfo existingInfo = existingIndexInfoMap.get(newItem.getIndexClassification());
-        if (existingInfo != null) {
-          // 업데이트 로직 (필요한 필드만 업데이트)
-          existingInfo.setIndexName(newItem.getIndexName());
-          existingInfo.setItemCount(newItem.getItemsCount());
-          existingInfo.setBasePointInTime(newItem.getBasePointInDate());
-          existingInfo.setBaseIndex(newItem.getBaseIndex());
-        } else {
-          // 삽입 로직
-          IndexInfo newIndexInfo = IndexInfo.builder()
-              .indexClassification(newItem.getIndexClassification())
-              .indexName(newItem.getIndexName())
-              .itemCount(newItem.getItemsCount())
-              .basePointInTime(newItem.getBasePointInDate())
-              .baseIndex(newItem.getBaseIndex())
-              .sourceType(OPEN_API.name())
-              .favorite(false)
-              .enabled(false)
-              .build();
-          existingIndexInfos.add(newIndexInfo);
-        }
-      }
-
-      // 4. 일괄 저장 todo batch insert 성능 고려
-      indexInfoRepository.saveAll(existingIndexInfos);
-
-      // 5. syncJob 생성 및 저장
-      List<SyncJob> newSyncJobs = existingIndexInfos.stream().map(ii ->
+      // 3. syncJob에 반영
+      List<SyncJob> newSyncJobs = updatedEntities.stream().map(ii ->
           SyncJob.builder()
               .indexInfo(ii)
-              .jobType(INDEX_INFO.name())
-              .targetDate(
-                  ii.getCreatedAt().atZone(ZoneId.systemDefault()).toLocalDate())
-              .worker(workerIp)
+              .jobType(JobType.INDEX_INFO.name())
+              .targetDate(targetDate)
+              .worker(workerIP)
               .jobTime(Instant.now())
               .isCompleted(true)
               .build()
       ).toList();
-
-      // todo batch insert 성능 고려
       syncJobRepository.saveAll(newSyncJobs);
-
-      return newSyncJobs.stream().map(SyncJobDto::new).toList();
-
-    } else {
-      // 5. BaseDate에서 작업한 Index_info가져오기
-      Instant startOfBaseDate = baseDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-      // 내일 시작 Instant (오늘 끝 경계)
-      Instant endOfBaseDate = baseDate.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant();
-
-      return syncJobRepository.findAllByJobTimeBetweenAndJobType(startOfBaseDate, endOfBaseDate,
-          INDEX_INFO.name()).stream().map(SyncJobDto::new).toList();
+//      return newSyncJobs.stream().map(SyncJobDto::new).toList();
     }
+
+    return syncJobRepository.findAllByTargetDateAndWorkerAndJobType
+        (targetDate, workerIP, INDEX_INFO.name()).stream().map(SyncJobDto::new).toList();
+
   }
 
   @Override
@@ -187,6 +190,33 @@ public class LinkIndexInfoServiceImpl implements LinkIndexInfoService {
 
   private boolean isMapValuesEmpty(Map<Long, List<Item>> map) {
     return map == null || map.values().stream().flatMap(List::stream).toList().isEmpty();
+  }
+
+  private String getIndexSymbol(IndexInfo indexInfo) {
+    return indexInfo.getIndexName() + indexInfo.getIndexClassification();
+  }
+
+  private String getItemSymbol(Item item) {
+    return item.getIndexName() + item.getIndexClassification();
+  }
+
+  private List<Item> getNewIndexInfosByBaseDate(LocalDate baseDate) {
+    StockMarketIndexResponse response = openApiUtil.fetchStockMarketIndex(
+        StockMarketIndexRequest.builder()
+            .basDt(baseDate.format(BASIC_ISO_DATE))
+            .numOfRows(MAX_ITEMS)
+            .build());
+    if (response != null
+        && response.getResponse() != null
+        && response.getResponse().getBody() != null
+        && response.getResponse().getBody().getItems() != null
+        && response.getResponse().getBody().getItems().getItem() != null
+    ) {
+
+      return response.getResponse().getBody().getItems().getItem();
+    } else {
+      throw new RuntimeException("OpenAPI Response value is NULL");
+    }
   }
 
 }

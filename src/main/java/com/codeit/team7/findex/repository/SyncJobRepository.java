@@ -30,9 +30,15 @@ public interface SyncJobRepository extends JpaRepository<SyncJob, Long>, SyncJob
   Optional<SyncJob> findTopByTargetDateAndWorkerAndJobType(
       LocalDate targetDate, String worker, String jobType);
 
-  //
+  Optional<SyncJob> findTopByTargetDateAndWorkerNotAndJobType(
+      LocalDate targetDate, String worker, String jobType);
+
+  @EntityGraph(attributePaths = {"indexInfo.id"})
   List<SyncJob> findAllByTargetDateAndWorkerAndJobType(
       LocalDate targetDate, String worker, String jobType);
+
+  List<SyncJob> findAllByTargetDateAndJobType(
+      LocalDate targetDate, String jobType);
 
   @Query("""
       SELECT sj

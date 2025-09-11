@@ -6,7 +6,6 @@ import com.codeit.team7.findex.domain.enums.SortedDirection;
 import com.codeit.team7.findex.domain.enums.SyncJobSortedField;
 import com.codeit.team7.findex.dto.CursorPageResponseSyncJobDto;
 import com.codeit.team7.findex.dto.GetNewIndexDataResult;
-import com.codeit.team7.findex.dto.GetNewIndexInfosResult;
 import com.codeit.team7.findex.dto.LinkIndexInfosDto;
 import com.codeit.team7.findex.dto.SyncJobDto;
 import com.codeit.team7.findex.dto.command.GetSyncJobCommand;
@@ -81,15 +80,8 @@ public class SyncJobController {
   public ResponseEntity<List<SyncJobResponse>> linkIndexInfos(HttpServletRequest request) {
     String ip = getClientIp(request);
 
-    // 1. OpenAPI에서 새로운 지수 정보 가져오기
-    GetNewIndexInfosResult getNewIndexInfosResult = openApiService.getNewIndexInfos();
-    // 2. 새로운 지수 정보들을 IndexInfo 엔티티로 변환 및 저장하고, 각각에 대해 SyncJob 생성
-    List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexInfos(LinkIndexInfosDto.builder()
-        .items(getNewIndexInfosResult.getItems())
-        .BaseDate(getNewIndexInfosResult.getBaseDate())
-        .isToUpdate(getNewIndexInfosResult.isToUpdate())
-        .ip(ip)
-        .build());
+    List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexInfos(
+        LinkIndexInfosDto.builder().ip(ip).build());
 
     return ResponseEntity.status(202)
         .body(syncJobDtos.stream().map(syncJobMapper::toResponse).toList());

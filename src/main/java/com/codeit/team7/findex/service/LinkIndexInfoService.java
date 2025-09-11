@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface LinkIndexInfoService {
 
-  List<SyncJobDto> LinkIndexInfos(LinkIndexInfosDto linkIndexInfosDto);
+  List<SyncJobDto> LinkIndexInfos(LinkIndexInfosDto dto);
 
   List<SyncJobDto> LinkIndexData(LinkIndexDataDto dto);
 

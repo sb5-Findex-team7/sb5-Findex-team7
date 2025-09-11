@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class SyncIndexInfoServiceImpl implements SyncIndexInfoService {
+public class BatchIndexInfoServiceImpl implements SyncIndexInfoService {
 
   private final SyncJobRepository syncJobRepository;
   private final IndexInfoRepository indexInfoRepository;

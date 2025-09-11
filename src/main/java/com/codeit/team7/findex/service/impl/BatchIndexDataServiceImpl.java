@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
-public class SyncIndexDataServiceImpl implements SyncIndexDataService {
+public class BatchIndexDataServiceImpl implements SyncIndexDataService {
 
   private final SyncJobRepository syncJobRepository;
   private final IndexDataRepository indexDataRepository;
