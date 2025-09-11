@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 public interface IndexDataRepository extends JpaRepository<IndexData, Long> {
 
@@ -17,4 +19,13 @@ public interface IndexDataRepository extends JpaRepository<IndexData, Long> {
   List<IndexData> findAllByIndexInfoIdInAndBaseDate(List<Long> indexInfoId, LocalDate baseDate);
 
 
+
+  @Repository
+  public interface IndexDataRepository extends JpaRepository<IndexData, Long> {
+  // 카테고리
+  //  List<IndexData> findBySourceType(SourceType sourceType);
+
+
+  boolean existsByIndexInfoIdAndBaseDate(@Param("indexInfoId") Long indexInfoId,
+                                         @Param("baseDate") LocalDate baseDate);
 }
