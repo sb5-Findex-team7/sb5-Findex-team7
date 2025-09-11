@@ -13,5 +13,8 @@ public interface IndexDataRepository extends JpaRepository<IndexData, Long> {
       LocalDate startDate,
       LocalDate endDate);
 
+  @EntityGraph(attributePaths = {"indexInfo.id"})
+  List<IndexData> findAllByIndexInfoIdInAndBaseDate(List<Long> indexInfoId, LocalDate baseDate);
+
 
 }

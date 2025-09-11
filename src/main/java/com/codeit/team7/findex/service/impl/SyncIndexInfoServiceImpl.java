@@ -49,7 +49,7 @@ public class SyncIndexInfoServiceImpl implements SyncIndexInfoService {
     List<IndexInfo> indexInfo = indexInfoRepository.findAllByEnabled(true);
 
     // 지수는 classificationName+IndexName 으로 식별이 가능함
-    //EX) key -> KRX시리즈+KRX 100 value -> IndextInfo 인스턴스
+    //EX) key -> KRX 시리즈+KRX 100 value -> IndexInfo 인스턴스
     Map<String, IndexInfo> targetInfosMap = indexInfo.stream().collect(Collectors.toMap(
         ii -> ii.getIndexName() + ii.getIndexClassification(), Function.identity()
     ));
