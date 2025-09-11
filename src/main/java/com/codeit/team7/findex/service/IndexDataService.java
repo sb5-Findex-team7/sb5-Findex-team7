@@ -23,7 +23,7 @@ public interface IndexDataService {
 
   CursorPageResponseIndexDataDto getIndexData(IndexDataScrollRequest request);
 
-  IndexChartDto getChartData(Long id, PeriodType periodType);
+  List<IndexChartDto> getChartData(Long id, PeriodType periodType);
 
   IndexDataDto update(Long id, IndexDataUpdateRequest request);
 
