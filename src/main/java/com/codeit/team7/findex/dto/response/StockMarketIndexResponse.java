@@ -1,6 +1,7 @@
 package com.codeit.team7.findex.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -13,6 +14,7 @@ import lombok.ToString;
 @Getter
 @Builder
 @ToString
+@JsonIgnoreProperties(ignoreUnknown = true) // 불필요한 필드는 무시
 public class StockMarketIndexResponse {
 
   @JsonProperty("response")

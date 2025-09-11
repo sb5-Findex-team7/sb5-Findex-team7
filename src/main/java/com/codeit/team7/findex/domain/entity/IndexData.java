@@ -12,11 +12,17 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
-@Getter @Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder @Setter
 @Table(name = "index_data")
 public class IndexData extends BaseUpdatableEntity {
 
