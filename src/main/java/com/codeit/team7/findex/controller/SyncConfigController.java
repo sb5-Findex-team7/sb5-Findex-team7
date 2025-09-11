@@ -56,14 +56,14 @@ public class SyncConfigController {
   ) {
     CursorPageResponseSyncConfigDto dto = syncConfigService.getSyncJobs(
         GetSyncConfigCommand.builder()
-                            .indexInfoId(indexInfoId)
-                            .enabled(enabled)
-                            .idAfter(idAfter)
-                            .cursor(cursor)
-                            .sortField(sortField)
-                            .sortDirection(sortDirection)
-                            .size(size)
-                            .build());
+            .indexInfoId(indexInfoId)
+            .enabled(enabled)
+            .idAfter(idAfter)
+            .cursor(cursor)
+            .sortField(sortField)
+            .sortDirection(sortDirection)
+            .size(size <= 0 ? 10 : size)
+            .build());
 
     return ResponseEntity.ok(syncConfigMapper.toCursorPageResponse(dto));
   }
