@@ -18,7 +18,6 @@ import com.codeit.team7.findex.mapper.IndexDataMapper;
 import com.codeit.team7.findex.repository.IndexDataQueryRepository;
 import com.codeit.team7.findex.repository.IndexDataRepository;
 import com.codeit.team7.findex.service.IndexDataService;
-import com.codeit.team7.findex.util.CacheUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.math.BigDecimal;
@@ -208,7 +207,7 @@ public class IndexDataServiceImpl implements IndexDataService {
   }
 
   @Override
-  public IndexChartDto getChartData(Long indexInfoId, PeriodType periodType) {
+  public List<IndexChartDto> getChartData(Long indexInfoId, PeriodType periodType) {
 
     LocalDate endDate = LocalDate.now();
     LocalDate startDate;
@@ -217,38 +216,20 @@ public class IndexDataServiceImpl implements IndexDataService {
       case MONTHLY -> endDate.minusMonths(1);
       case QUARTERLY -> endDate.minusMonths(3);
       case YEARLY -> endDate.minusYears(1);
-      default -> endDate.minusDays(1);
+      default -> endDate;
     };
 
-    IndexChartDto result = CacheUtil.getChartDto(indexInfoId, periodType);
-    if(result != null){
-      return result;
-    }
-
-    List<IndexData> data =  indexDataRepository.findByIndexInfoIdAndBaseDateBetweenOrderByBaseDateAsc(
+    List<IndexData> data = indexDataRepository.findByIndexInfoIdAndBaseDateBetweenOrderByBaseDateAsc(
         indexInfoId, startDate, endDate);
     if (data.isEmpty()) {
-
-      result = IndexChartDto.builder()
-                            .indexInfoId(indexInfoId)
-                            .indexClassification("")
-                            .indexName("")
-                            .periodType(periodType)
-                            .dataPoints(List.of())
-                            .ma5DataPoints(List.of())
-                            .ma20DataPoints(List.of())
-                            .build();
-
-      CacheUtil.setChartDto(indexInfoId, periodType, result);
-
-      return result;
+      return List.of();
     }
 
     List<IndexChartDto.DataPoint> dataPoints = data.stream()
                                                    .map(d -> IndexChartDto.DataPoint.builder()
                                                                                     .date(
                                                                                         d.getBaseDate())
-                                                                                    .value(
+                                                                                    .closingPrice(
                                                                                         d.getClosingPrice())
                                                                                     .build())
                                                    .toList();
@@ -259,19 +240,15 @@ public class IndexDataServiceImpl implements IndexDataService {
     IndexInfo info = data.get(0)
                          .getIndexInfo();
 
-    result = IndexChartDto.builder()
-                          .indexInfoId(info.getId())
-                          .indexClassification(info.getIndexClassification())
-                          .indexName(info.getIndexName())
-                          .periodType(periodType)
-                          .dataPoints(dataPoints)
-                          .ma5DataPoints(ma5)
-                          .ma20DataPoints(ma20)
-                          .build();
-
-    CacheUtil.setChartDto(indexInfoId, periodType, result);
-
-    return result;
+    return List.of(IndexChartDto.builder()
+                                .indexInfoId(info.getId())
+                                .indexClassification(info.getIndexClassification())
+                                .indexName(info.getIndexName())
+                                .periodType(periodType)
+                                .dataPoints(dataPoints)
+                                .ma5DataPoints(ma5)
+                                .ma20DataPoints(ma20)
+                                .build());
   }
 
   private List<IndexChartDto.DataPoint> calculateMovingAverage(List<IndexChartDto.DataPoint> points,
@@ -285,13 +262,13 @@ public class IndexDataServiceImpl implements IndexDataService {
       BigDecimal sum = BigDecimal.ZERO;
       for (int j = i - window + 1; j <= i; j++) {
         sum = sum.add(points.get(j)
-                            .getValue());
+                            .getClosingPrice());
       }
       BigDecimal avg = sum.divide(BigDecimal.valueOf(window), 2, RoundingMode.HALF_UP);
       maPoints.add(IndexChartDto.DataPoint.builder()
                                           .date(points.get(i)
                                                       .getDate())
-                                          .value(avg)
+                                          .closingPrice(avg)
                                           .build());
     }
     return maPoints;
@@ -307,12 +284,7 @@ public class IndexDataServiceImpl implements IndexDataService {
       case WEEKLY -> startDate = endDate.minusDays(6);
       case MONTHLY -> startDate = endDate.minusMonths(1)
                                          .plusDays(1);
-      default -> startDate = endDate.minusDays(1);
-    }
-
-    List<IndexPerformanceRankDto> result = CacheUtil.getRankDto(periodType);
-    if(result != null){
-      return result;
+      default -> startDate = endDate;
     }
 
     List<IndexData> dataInRange = indexDataRepository.findByBaseDateBetween(startDate, endDate);
@@ -386,8 +358,6 @@ public class IndexDataServiceImpl implements IndexDataService {
 //                             })
 //                             .toList();
 
-    CacheUtil.setRankDto(periodType, rankList);
-
     return rankList;
   }
 
@@ -402,12 +372,7 @@ public class IndexDataServiceImpl implements IndexDataService {
       case WEEKLY -> startDate = endDate.minusDays(6);
       case MONTHLY -> startDate = endDate.minusMonths(1)
                                          .plusDays(1);
-      default -> startDate = endDate.minusDays(1);
-    }
-
-    List<IndexPerformanceRankDto.IndexPerformanceDto> result = CacheUtil.getFavoritePerformance(periodType);
-    if(result != null){
-      return result;
+      default -> startDate = endDate;
     }
 
     List<IndexData> indexDataList = indexDataRepository.findByIndexInfoFavoriteAndBaseDateBetween(
@@ -432,15 +397,11 @@ public class IndexDataServiceImpl implements IndexDataService {
 //                                                                                    .beforePrice(p.getBeforePrice())
 //                                                                                    .build()).toList();
 
-    result = grouped.values()
-                    .stream()
-                    .map(
-                        this::calculatePerformance)
-                    .toList();
-
-    CacheUtil.setFavoritePerformance(periodType, result);
-
-    return result;
+    return grouped.values()
+                  .stream()
+                  .map(
+                      this::calculatePerformance)
+                  .toList();
   }
 
   private IndexPerformanceRankDto.IndexPerformanceDto calculatePerformance(
