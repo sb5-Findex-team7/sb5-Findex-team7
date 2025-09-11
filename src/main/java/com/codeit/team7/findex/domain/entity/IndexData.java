@@ -1,25 +1,33 @@
 package com.codeit.team7.findex.domain.entity;
 
 import com.codeit.team7.findex.domain.entity.base.BaseUpdatableEntity;
+import com.codeit.team7.findex.domain.enums.SourceType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
+@Getter @Setter
 @Table(name = "index_data")
 public class IndexData extends BaseUpdatableEntity {
 
-  @ManyToOne
+  @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "index_info_id")
   private IndexInfo indexInfo;
   @Column(nullable = false, name = "bas_dt")
   private LocalDate baseDate;
+  @Enumerated(EnumType.STRING)
   @Column(nullable = false, name = "source_type")
-  private String sourceType;
+  private SourceType sourceType;
   @Column(nullable = false, name = "mkp")
   private BigDecimal marketPrice;
   @Column(nullable = false, name = "clpr")
@@ -38,4 +46,5 @@ public class IndexData extends BaseUpdatableEntity {
   private Long tradingPrice;
   @Column(nullable = false, name = "lstg_mrkt_tot_amt")
   private Long marketTotalAmount;
+
 }

@@ -37,14 +37,12 @@ public class IndexInfo extends BaseUpdatableEntity {
   @Column(nullable = false, name = "bas_pntm")
   private LocalDate basePointInTime;
 
-  @Column(nullable = false, name = "bas_idx", precision = 32, scale = 2)
+  @Column(nullable = false, name = "bas_idx", precision = 32, scale = 2) // TODO 확인
   private BigDecimal baseIndex;
 
   @Enumerated(EnumType.STRING)
   @Column(nullable = false, name = "source_type", length = 20)
   private SourceType sourceType;
-
-  // 즐겨찾기 기본값 false
   @Column(nullable = false, name = "favorite")
   private boolean favorite;
 

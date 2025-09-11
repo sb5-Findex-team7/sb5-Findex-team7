@@ -1,0 +1,26 @@
+package com.codeit.team7.findex.dto.request;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Getter @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+public class IndexDataCreateRequest {
+
+  private Long indexInfoId;
+  private LocalDate baseDate;
+  private BigDecimal marketPrice;
+  private BigDecimal closingPrice;
+  private BigDecimal highPrice;
+  private BigDecimal lowPrice;
+  private BigDecimal versus;
+  private BigDecimal fluctuationRate;
+  private Long tradingQuantity;
+  private Long tradingPrice;
+  private Long marketTotalAmount;
+}
