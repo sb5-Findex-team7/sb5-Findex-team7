@@ -75,7 +75,6 @@ public class SyncJobQueryRepositoryImpl implements
     if (idAfter != null) {
       where.and(sj.id.gt(idAfter));
     }
-    System.out.println("@@@@");
 
     // 2. 페이지 네이션
     OrderSpecifier<?> order;
