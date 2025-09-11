@@ -30,10 +30,18 @@ public class SyncIndexDataBatchJob {
 
     try {
       syncIndexInfoService.sync(latestDate);
+
+    } catch (Exception e) {
+      logger.error("Index Info batch Job 중 에러 발생");
+      logger.error(Arrays.toString(e.getStackTrace()));
+      logger.error(e.getMessage());
+    }
+
+    try {
       syncIndexDataService.sync(latestDate);
 
     } catch (Exception e) {
-      logger.error("batch Job 중 에러 발생");
+      logger.error("Index Data batch Job 중 에러 발생");
       logger.error(Arrays.toString(e.getStackTrace()));
       logger.error(e.getMessage());
     }

@@ -1,6 +1,7 @@
 package com.codeit.team7.findex.service.impl;
 
 import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
+import static java.time.format.DateTimeFormatter.ISO_DATE;
 
 import com.codeit.team7.findex.domain.entity.IndexInfo;
 import com.codeit.team7.findex.domain.entity.SyncJob;
@@ -8,6 +9,8 @@ import com.codeit.team7.findex.domain.enums.JobType;
 import com.codeit.team7.findex.dto.request.StockMarketIndexRequest;
 import com.codeit.team7.findex.dto.response.StockMarketIndexResponse;
 import com.codeit.team7.findex.dto.response.StockMarketIndexResponse.Item;
+import com.codeit.team7.findex.exception.sync.AlreadyUpdatedException;
+import com.codeit.team7.findex.exception.sync.NonNewDataException;
 import com.codeit.team7.findex.repository.IndexInfoRepository;
 import com.codeit.team7.findex.repository.SyncJobRepository;
 import com.codeit.team7.findex.service.SyncIndexInfoService;
@@ -42,7 +45,10 @@ public class SyncIndexInfoServiceImpl implements SyncIndexInfoService {
 
     // 이미 시스템이 동기화를 한 경우
     if (syncJob != null) {
-      return;
+      throw new AlreadyUpdatedException(
+          "이미 처리 완료",
+          targetDate.format(ISO_DATE) + "날의 Index Info 최신화가 이미 완료 되었습니다."
+      );
     }
 
     // 2. enabled 된 지수 정보(INFO) 최신화
@@ -56,7 +62,9 @@ public class SyncIndexInfoServiceImpl implements SyncIndexInfoService {
 
     List<Item> newData = getNewIndexInfosByBaseDate(targetDate);
     if (newData == null || newData.isEmpty()) {
-      return;
+      throw new NonNewDataException(
+          "신규 데이터 없음",
+          targetDate.format(ISO_DATE) + "날의 신규 데이터가 Open API 에서 조회되지 않았습니다");
     }
     // API 호출 결과 Map
     Map<String, Item> newDataMap = getNewIndexInfosByBaseDate(targetDate)
@@ -81,7 +89,6 @@ public class SyncIndexInfoServiceImpl implements SyncIndexInfoService {
 
     );
     List<IndexInfo> updatedEntities = targetInfosMap.values().stream().toList();
-    System.out.println(updatedEntities);
     indexInfoRepository.saveAll(updatedEntities);
     // 3. syncJob에 반영
     List<SyncJob> newSyncJobs = updatedEntities.stream().map(ii ->

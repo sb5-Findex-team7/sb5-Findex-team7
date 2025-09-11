@@ -1,6 +1,7 @@
 package com.codeit.team7.findex.service.impl;
 
 import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
+import static java.time.format.DateTimeFormatter.ISO_DATE;
 
 import com.codeit.team7.findex.domain.entity.IndexData;
 import com.codeit.team7.findex.domain.entity.IndexInfo;
@@ -10,6 +11,8 @@ import com.codeit.team7.findex.domain.enums.SourceType;
 import com.codeit.team7.findex.dto.request.StockMarketIndexRequest;
 import com.codeit.team7.findex.dto.response.StockMarketIndexResponse;
 import com.codeit.team7.findex.dto.response.StockMarketIndexResponse.Item;
+import com.codeit.team7.findex.exception.sync.AlreadyUpdatedException;
+import com.codeit.team7.findex.exception.sync.NonNewDataException;
 import com.codeit.team7.findex.repository.IndexDataRepository;
 import com.codeit.team7.findex.repository.IndexInfoRepository;
 import com.codeit.team7.findex.repository.SyncJobRepository;
@@ -24,6 +27,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -39,6 +43,8 @@ public class SyncIndexDataServiceImpl implements SyncIndexDataService {
   private static final String SYSTEM_WORKER = "system";
 
 
+  @Override
+  @Transactional
   public void sync(LocalDate targetDate) {
     // 1. 최신 데이터를 봤을 때 이미 최신화가 되었는지 확인
     SyncJob syncJob = syncJobRepository.findTopByTargetDateAndWorkerAndJobType(
@@ -48,7 +54,10 @@ public class SyncIndexDataServiceImpl implements SyncIndexDataService {
     ).orElse(null);
 
     if (syncJob != null) {
-      return;
+      throw new AlreadyUpdatedException(
+          "이미 처리 완료.",
+          targetDate.format(ISO_DATE) + "날의 Index Info 최신화가 이미 완료 되었습니다."
+      );
     }
 
     // 2. enabled 된 targetDate 지수 (데이터) 불러오기
@@ -108,7 +117,9 @@ public class SyncIndexDataServiceImpl implements SyncIndexDataService {
     );
 
     if (newIndexData.isEmpty()) {
-      return;
+      throw new NonNewDataException(
+          "신규 데이터 없음",
+          targetDate.format(ISO_DATE) + "날의 신규 데이터가 Open API 에서 조회되지 않았습니다");
     }
 
     // todo bulkInsert 최적화
