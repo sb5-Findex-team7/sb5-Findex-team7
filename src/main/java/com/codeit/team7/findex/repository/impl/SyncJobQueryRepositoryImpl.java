@@ -64,10 +64,10 @@ public class SyncJobQueryRepositoryImpl implements
       where.and(sj.worker.eq(worker));
     }
     if (jobTimeFrom != null) {
-      where.and(sj.jobTime.goe(Instant.from(jobTimeFrom)));
+      where.and(sj.jobTime.goe(jobTimeFrom.atZone(ZoneId.systemDefault()).toInstant()));
     }
     if (jobTimeTo != null) {
-      where.and(sj.jobTime.loe(Instant.from(jobTimeTo)));
+      where.and(sj.jobTime.loe(jobTimeTo.atZone(ZoneId.systemDefault()).toInstant()));
     }
     if (status != null) {
       where.and(sj.isCompleted.eq(status));
@@ -75,6 +75,7 @@ public class SyncJobQueryRepositoryImpl implements
     if (idAfter != null) {
       where.and(sj.id.gt(idAfter));
     }
+    System.out.println("@@@@");
 
     // 2. 페이지 네이션
     OrderSpecifier<?> order;
@@ -94,12 +95,13 @@ public class SyncJobQueryRepositoryImpl implements
     }
 
     if (cursor != null) {
-      LocalDate cursorDate = LocalDate.ofInstant(Instant.from(cursor), ZoneId.systemDefault());
+      Instant cursorInstant = cursor.atZone(ZoneId.systemDefault()).toInstant();
+      LocalDate cursorDate = cursor.toLocalDate();
       if (sortedField.equals(jobTime)) {
         if (direction.equals(desc)) {
-          where.and(sj.jobTime.lt(Instant.from(cursor)));
+          where.and(sj.jobTime.lt(cursorInstant));
         } else {
-          where.and(sj.jobTime.gt(Instant.from(cursor)));
+          where.and(sj.jobTime.gt(cursorInstant));
         }
       } else if (sortedField == SyncJobSortedField.targetDate) {
         if (direction.equals(desc)) {
@@ -109,9 +111,9 @@ public class SyncJobQueryRepositoryImpl implements
         }
       } else {   // default 는 jobTime
         if (direction.equals(desc)) {
-          where.and(sj.jobTime.lt(Instant.from(cursor)));
+          where.and(sj.jobTime.lt(cursorInstant));
         } else {
-          where.and(sj.jobTime.gt(Instant.from(cursor)));
+          where.and(sj.jobTime.gt(cursorInstant));
         }
       }
     }

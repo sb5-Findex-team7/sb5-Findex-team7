@@ -17,10 +17,11 @@ import com.codeit.team7.findex.service.LinkIndexInfoService;
 import com.codeit.team7.findex.service.OpenApiService;
 import com.codeit.team7.findex.service.SyncJobService;
 import jakarta.servlet.http.HttpServletRequest;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -43,14 +44,14 @@ public class SyncJobController {
   public ResponseEntity<CursorPageResponseSyncJobResponse> getSyncJobs(
       @RequestParam(required = false) JobType jobType,
       @RequestParam(required = false) Long indexInfoId,
-      @RequestParam(required = false) LocalDate baseDateFrom,
-      @RequestParam(required = false) LocalDate baseDateTo,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime baseDateFrom,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime baseDateTo,
       @RequestParam(required = false) String worker,
       @RequestParam(required = false) LocalDateTime jobTimeFrom,
       @RequestParam(required = false) LocalDateTime jobTimeTo,
       @RequestParam(required = false) JobStatus status, // 작업 상태 (SUCCESS, FAILED)
       @RequestParam(required = false) Long idAfter,
-      @RequestParam(required = false) LocalDateTime cursor, // 이때 커서는 datetime
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime cursor,
       @RequestParam(required = false) SyncJobSortedField sortField,
       @RequestParam(required = false) SortedDirection sortDirection,
       @RequestParam(required = false, defaultValue = "10") Integer size
@@ -60,8 +61,13 @@ public class SyncJobController {
         GetSyncJobCommand.builder()
             .jobType(jobType)
             .indexInfoId(indexInfoId)
-            .baseDateFrom(baseDateFrom)
-            .baseDateTo(baseDateTo)
+            .baseDateFrom(
+                Optional.ofNullable(baseDateFrom)
+                    .map(LocalDateTime::toLocalDate)
+                    .orElse(null))
+            .baseDateTo(Optional.ofNullable(baseDateTo)
+                .map(LocalDateTime::toLocalDate)
+                .orElse(null))
             .worker(worker)
             .jobTimeFrom(jobTimeFrom)
             .jobTimeTo(jobTimeTo)
