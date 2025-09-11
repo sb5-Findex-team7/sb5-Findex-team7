@@ -12,7 +12,7 @@ public class StockDateUtil {
 
   // 한국 주식시장 (KST 기준, 09:00 ~ 15:30 오픈)
   private static final LocalTime MARKET_OPEN = LocalTime.of(9, 0);
-  private static final LocalTime MARKET_CLOSE = LocalTime.of(15, 30);
+  private static final LocalTime MARKET_CLOSE = LocalTime.of(22, 00);
   private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
   /**

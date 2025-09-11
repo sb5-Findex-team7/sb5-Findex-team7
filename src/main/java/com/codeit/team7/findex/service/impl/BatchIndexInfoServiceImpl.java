@@ -1,5 +1,6 @@
 package com.codeit.team7.findex.service.impl;
 
+import static com.codeit.team7.findex.domain.enums.SourceType.OPEN_API;
 import static java.time.format.DateTimeFormatter.BASIC_ISO_DATE;
 import static java.time.format.DateTimeFormatter.ISO_DATE;
 
@@ -84,6 +85,20 @@ public class BatchIndexInfoServiceImpl implements SyncIndexInfoService {
             targetEntity.setItemCount(newInfo.getItemsCount());
             targetEntity.setBasePointInTime(newInfo.getBasePointInDate());
             targetEntity.setBaseIndex(newInfo.getBaseIndex());
+          } else {
+            Item item = newDataMap.get(k);
+
+            targetInfosMap.put(k, IndexInfo.builder()
+                .indexClassification(
+                    item.getIndexClassification())
+                .indexName(item.getIndexName())
+                .itemCount(item.getItemsCount())
+                .basePointInTime(item.getBasePointInDate())
+                .baseIndex(item.getBaseIndex())
+                .sourceType(OPEN_API.name())
+                .favorite(false)
+                .enabled(false)
+                .build());
           }
         }
 

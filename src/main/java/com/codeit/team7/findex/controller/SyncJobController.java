@@ -62,23 +62,23 @@ public class SyncJobController {
 
     CursorPageResponseSyncJobDto syncJobDtos = syncJobService.getSyncJobList(
         GetSyncJobCommand.builder()
-                         .jobType(jobType)
-                         .indexInfoId(indexInfoId)
-                         .baseDateFrom(
-                             Optional.ofNullable(baseDateFrom)
-                                     .orElse(null))
-                         .baseDateTo(Optional.ofNullable(baseDateTo)
-                                             .orElse(null))
-                         .worker(worker)
-                         .jobTimeFrom(jobTimeFrom)
-                         .jobTimeTo(jobTimeTo)
-                         .status(status)
-                         .idAfter(idAfter)
-                         .cursor(cursor)
-                         .sortField(sortField)
-                         .sortDirection(sortDirection)
-                         .size(size)
-                         .build());
+            .jobType(jobType)
+            .indexInfoId(indexInfoId)
+            .baseDateFrom(
+                Optional.ofNullable(baseDateFrom)
+                    .orElse(null))
+            .baseDateTo(Optional.ofNullable(baseDateTo)
+                .orElse(null))
+            .worker(worker)
+            .jobTimeFrom(jobTimeFrom)
+            .jobTimeTo(jobTimeTo)
+            .status(status)
+            .idAfter(idAfter)
+            .cursor(cursor)
+            .sortField(sortField)
+            .sortDirection(sortDirection)
+            .size(size <= 0 ? 10 : size)
+            .build());
 
     return ResponseEntity.ok(syncJobMapper.toCursorPageResponse(syncJobDtos));
   }
@@ -89,13 +89,13 @@ public class SyncJobController {
 
     List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexInfos(
         LinkIndexInfosDto.builder()
-                         .ip(ip)
-                         .build());
+            .ip(ip)
+            .build());
 
     return ResponseEntity.status(202)
-                         .body(syncJobDtos.stream()
-                                          .map(syncJobMapper::toResponse)
-                                          .toList());
+        .body(syncJobDtos.stream()
+            .map(syncJobMapper::toResponse)
+            .toList());
   }
 
   @PostMapping("/index-data")
@@ -111,9 +111,9 @@ public class SyncJobController {
         linkIndexInfoService.LinkIndexData(syncJobMapper.toDto(result, ip));
 
     return ResponseEntity.status(202)
-                         .body(syncJobDtos.stream()
-                                          .map(syncJobMapper::toResponse)
-                                          .toList());
+        .body(syncJobDtos.stream()
+            .map(syncJobMapper::toResponse)
+            .toList());
 
   }
 
