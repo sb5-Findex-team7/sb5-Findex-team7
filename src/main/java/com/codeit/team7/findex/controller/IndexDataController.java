@@ -9,7 +9,6 @@ import com.codeit.team7.findex.dto.request.IndexDataCreateRequest;
 import com.codeit.team7.findex.dto.request.IndexDataUpdateRequest;
 import com.codeit.team7.findex.dto.response.CursorPageResponseIndexDataDto;
 import com.codeit.team7.findex.service.IndexDataService;
-import com.codeit.team7.findex.service.impl.IndexDataServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -37,7 +36,6 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "지수 데이터 API", description = "지수 데이터 관리 API")
 public class IndexDataController {
   private final IndexDataService indexDataService;
-  private final IndexDataServiceImpl indexDataServiceImpl;
 
 
   @GetMapping
@@ -67,7 +65,7 @@ public class IndexDataController {
     LocalDateTime startTime = (startDate != null) ? startDate.atStartOfDay() : null;
     LocalDateTime endTime = (endDate != null) ? endDate.atStartOfDay() : null;
 
-    CursorPageResponseIndexDataDto res = indexDataServiceImpl.getIndexData(
+    CursorPageResponseIndexDataDto res = indexDataService.getIndexData(
         IndexDataScrollRequest.builder()
             .indexInfoId(indexInfoId)
             .startTime(startTime)
