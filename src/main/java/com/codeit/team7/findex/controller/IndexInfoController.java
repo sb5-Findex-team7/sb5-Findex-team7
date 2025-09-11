@@ -31,12 +31,14 @@ public class IndexInfoController {
   public ResponseEntity<IndexInfoDto> create(
       @RequestBody IndexInfoCreateRequest indexInfoCreateRequest) {
     IndexInfoDto indexInfoDto = indexInfoService.create(indexInfoCreateRequest);
-    return ResponseEntity.status(HttpStatus.CREATED).body(indexInfoDto);
+    return ResponseEntity.status(HttpStatus.CREATED)
+                         .body(indexInfoDto);
   }
 
   @GetMapping("/{id}")
   public ResponseEntity<IndexInfoDto> get(@PathVariable Long id) {
-    return ResponseEntity.status(HttpStatus.OK).body(indexInfoService.findById(id));
+    return ResponseEntity.status(HttpStatus.OK)
+                         .body(indexInfoService.findById(id));
   }
 
   @PatchMapping("/{id}")
@@ -44,18 +46,20 @@ public class IndexInfoController {
       @PathVariable Long id,
       @RequestBody IndexInfoUpdateRequest indexInfoUpdateRequest) {
     return ResponseEntity.status(HttpStatus.OK)
-        .body(indexInfoService.update(id, indexInfoUpdateRequest));
+                         .body(indexInfoService.update(id, indexInfoUpdateRequest));
   }
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> delete(@PathVariable Long id) {
     indexInfoService.deleteById(id);
-    return ResponseEntity.noContent().build();
+    return ResponseEntity.noContent()
+                         .build();
   }
 
   @GetMapping("/summaries")
   public ResponseEntity<List<IndexInfoSummaryDto>> summaries() {
-    return ResponseEntity.status(HttpStatus.OK).body(indexInfoService.findAllSummaries());
+    return ResponseEntity.status(HttpStatus.OK)
+                         .body(indexInfoService.findAllSummaries());
   }
 
   @GetMapping
@@ -73,6 +77,7 @@ public class IndexInfoController {
         indexClassification, indexName, favorite,
         sortField, sortDirection, idAfter, cursor, size
     );
-    return ResponseEntity.status(HttpStatus.OK).body(body);
+    return ResponseEntity.status(HttpStatus.OK)
+                         .body(body);
   }
 }

@@ -42,7 +42,7 @@ public class IndexInfoServiceImpl implements IndexInfoService {
   public IndexInfoDto update(Long id, IndexInfoUpdateRequest request) {
     IndexInfo indexInfo = indexInfoRepository.findById(id)
         .orElseThrow(() -> new NoSuchElementException("IndexInfo with id " + id + " not found"));
-    boolean newFavorite = request.favorite() != null ? request.favorite() : indexInfo.isFavorite();
+    boolean newFavorite = request.favorite() != null ? request.favorite() : indexInfo.getFavorite();
     indexInfo.update(request.employedItemsCount(), request.basePointInTime(), request.baseIndex(),
         newFavorite);
     return IndexInfoDto.fromEntity(indexInfo);

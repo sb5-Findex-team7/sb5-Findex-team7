@@ -7,6 +7,6 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum SourceType {
   USER,
-  OPEN_API
+  OPEN_API,
 }
 

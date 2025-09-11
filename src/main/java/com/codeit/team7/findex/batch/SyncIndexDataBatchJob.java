@@ -24,9 +24,10 @@ public class SyncIndexDataBatchJob {
 
   @Scheduled(fixedRate = 60 * 60 * 1000) // 1시간 마다 실행
   public void runBatchJob() {
-    LocalDate latestDate = stockDateUtil.getLatestDate();
+//    LocalDate latestDate = stockDateUtil.getLatestDate();
+    LocalDate latestDate = LocalDate.of(2025, 9, 10);
 
-    logger.info("batch Job 실행 {}", Instant.now());
+        logger.info("batch Job 실행 {}", Instant.now());
 
     try {
       syncIndexInfoService.sync(latestDate);
