@@ -48,6 +48,6 @@ public class IndexChartDto {
     private LocalDate date;
 
     @Schema(description = "종가", example = "1234.56")
-    private BigDecimal closingPrice;
+    private BigDecimal value;
   }
 }

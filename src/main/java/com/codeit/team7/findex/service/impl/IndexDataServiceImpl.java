@@ -207,7 +207,7 @@ public class IndexDataServiceImpl implements IndexDataService {
   }
 
   @Override
-  public List<IndexChartDto> getChartData(Long indexInfoId, PeriodType periodType) {
+  public IndexChartDto getChartData(Long indexInfoId, PeriodType periodType) {
 
     LocalDate endDate = LocalDate.now();
     LocalDate startDate;
@@ -222,14 +222,23 @@ public class IndexDataServiceImpl implements IndexDataService {
     List<IndexData> data = indexDataRepository.findByIndexInfoIdAndBaseDateBetweenOrderByBaseDateAsc(
         indexInfoId, startDate, endDate);
     if (data.isEmpty()) {
-      return List.of();
+
+      return IndexChartDto.builder()
+                          .indexInfoId(indexInfoId)
+                          .indexClassification("")
+                          .indexName("")
+                          .periodType(periodType)
+                          .dataPoints(List.of())
+                          .ma5DataPoints(List.of())
+                          .ma20DataPoints(List.of())
+                          .build();
     }
 
     List<IndexChartDto.DataPoint> dataPoints = data.stream()
                                                    .map(d -> IndexChartDto.DataPoint.builder()
                                                                                     .date(
                                                                                         d.getBaseDate())
-                                                                                    .closingPrice(
+                                                                                    .value(
                                                                                         d.getClosingPrice())
                                                                                     .build())
                                                    .toList();
@@ -240,15 +249,15 @@ public class IndexDataServiceImpl implements IndexDataService {
     IndexInfo info = data.get(0)
                          .getIndexInfo();
 
-    return List.of(IndexChartDto.builder()
-                                .indexInfoId(info.getId())
-                                .indexClassification(info.getIndexClassification())
-                                .indexName(info.getIndexName())
-                                .periodType(periodType)
-                                .dataPoints(dataPoints)
-                                .ma5DataPoints(ma5)
-                                .ma20DataPoints(ma20)
-                                .build());
+    return IndexChartDto.builder()
+                        .indexInfoId(info.getId())
+                        .indexClassification(info.getIndexClassification())
+                        .indexName(info.getIndexName())
+                        .periodType(periodType)
+                        .dataPoints(dataPoints)
+                        .ma5DataPoints(ma5)
+                        .ma20DataPoints(ma20)
+                        .build();
   }
 
   private List<IndexChartDto.DataPoint> calculateMovingAverage(List<IndexChartDto.DataPoint> points,
@@ -262,13 +271,13 @@ public class IndexDataServiceImpl implements IndexDataService {
       BigDecimal sum = BigDecimal.ZERO;
       for (int j = i - window + 1; j <= i; j++) {
         sum = sum.add(points.get(j)
-                            .getClosingPrice());
+                            .getValue());
       }
       BigDecimal avg = sum.divide(BigDecimal.valueOf(window), 2, RoundingMode.HALF_UP);
       maPoints.add(IndexChartDto.DataPoint.builder()
                                           .date(points.get(i)
                                                       .getDate())
-                                          .closingPrice(avg)
+                                          .value(avg)
                                           .build());
     }
     return maPoints;

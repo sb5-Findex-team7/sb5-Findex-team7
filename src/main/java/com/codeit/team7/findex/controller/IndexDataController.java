@@ -1,21 +1,27 @@
 package com.codeit.team7.findex.controller;
 
 
+import com.codeit.team7.findex.domain.enums.IndexDataSortDirection;
+import com.codeit.team7.findex.domain.enums.IndexDataSortField;
 import com.codeit.team7.findex.domain.enums.PeriodType;
-import com.codeit.team7.findex.dto.PaginatedResult;
+import com.codeit.team7.findex.dto.IndexDataScrollRequest;
 import com.codeit.team7.findex.dto.command.ExportCsvCommand;
 import com.codeit.team7.findex.dto.command.IndexDataDto;
-import com.codeit.team7.findex.dto.command.IndexDataQueryCommand;
 import com.codeit.team7.findex.dto.request.IndexDataCreateRequest;
 import com.codeit.team7.findex.dto.request.IndexDataUpdateRequest;
+import com.codeit.team7.findex.dto.response.CursorPageResponseIndexDataDto;
 import com.codeit.team7.findex.dto.response.IndexChartDto;
 import com.codeit.team7.findex.dto.response.IndexPerformanceRankDto;
 import com.codeit.team7.findex.service.IndexDataService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -40,35 +46,76 @@ public class IndexDataController {
 
   private final IndexDataService indexDataService;
 
+//  @GetMapping
+//  public ResponseEntity<PaginatedResult<IndexDataDto>> getIndexData(
+//      @RequestParam(required = false) Long indexInfoId,
+//      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+//      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+//      @RequestParam(required = false) Long idAfter,
+//      @RequestParam(required = false) String cursor,
+//      @RequestParam(defaultValue = "baseDate") String sortField,
+//      @RequestParam(defaultValue = "desc") String sortDirection,
+//      @RequestParam(defaultValue = "10") int size
+//  ) {
+//    IndexDataQueryCommand command = IndexDataQueryCommand.builder()
+//                                                         .indexInfoId(indexInfoId)
+//                                                         .startDate(startDate)
+//                                                         .endDate(endDate)
+//                                                         .idAfter(idAfter)
+//                                                         .cursor(cursor)
+//                                                         .sortField(sortField)
+//                                                         .sortDirection(sortDirection)
+//                                                         .size(size)
+//                                                         .build();
+//
+//    return ResponseEntity.ok(indexDataService.getIndexDataList(command));
+//  }
+
 
   @GetMapping
-  public ResponseEntity<PaginatedResult<IndexDataDto>> getIndexData(
+  @Operation(summary = "지수 데이터 목록 조회")
+  public ResponseEntity<CursorPageResponseIndexDataDto> getIndexData(
+      @Parameter(description = "지수 정보 ID")
       @RequestParam(required = false) Long indexInfoId,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+      @Parameter(description = "시작 일자")
+      @RequestParam(required = false) LocalDate startDate,
+      @Parameter(description = "종료 일자")
+      @RequestParam(required = false) LocalDate endDate,
+      @Parameter(description = "이전 페이지 마지막 요소 ID")
       @RequestParam(required = false) Long idAfter,
+      @Parameter(description = "커서 (다음 페이지 시작점)")
       @RequestParam(required = false) String cursor,
-      @RequestParam(defaultValue = "baseDate") String sortField,
-      @RequestParam(defaultValue = "desc") String sortDirection,
-      @RequestParam(defaultValue = "10") int size
-  ) {
-    IndexDataQueryCommand command = IndexDataQueryCommand.builder()
-                                                         .indexInfoId(indexInfoId)
-                                                         .startDate(startDate)
-                                                         .endDate(endDate)
-                                                         .idAfter(idAfter)
-                                                         .cursor(cursor)
-                                                         .sortField(sortField)
-                                                         .sortDirection(sortDirection)
-                                                         .size(size)
-                                                         .build();
+      @Parameter(schema = @Schema(type = "string", defaultValue = "baseDate"),
+          description = "정렬 필드 (baseDate, marketPrice, closingPrice, highPrice, lowPrice, versus, fluctuationRate, tradingQuantity, tradingPrice, marketTotalAmount)")
+      @RequestParam(required = false) IndexDataSortField sortField,
+      @Parameter(schema = @Schema(type = "string", defaultValue = "desc"), description = "정렬 방향 (asc, desc)")
+      @RequestParam(required = false) IndexDataSortDirection sortDirection,
+      @Schema(defaultValue = "10", description = "페이지 크기")
+      @RequestParam(required = false) Integer size) {
+    int realSize = Optional.ofNullable(size)
+                           .filter(s -> s > 0)
+                           .orElse(10);
 
-    return ResponseEntity.ok(indexDataService.getIndexDataList(command));
+    LocalDateTime startTime = (startDate != null) ? startDate.atStartOfDay() : null;
+    LocalDateTime endTime = (endDate != null) ? endDate.atStartOfDay() : null;
+
+    CursorPageResponseIndexDataDto res = indexDataService.getIndexData(
+        IndexDataScrollRequest.builder()
+                              .indexInfoId(indexInfoId)
+                              .startTime(startTime)
+                              .endTime(endTime)
+                              .idAfter(idAfter)
+                              .sortField(sortField)
+                              .sortDirection(sortDirection)
+                              .size(realSize)
+                              .build()
+    );
+    return ResponseEntity.ok(res);
   }
 
   @Operation(summary = "차트 데이터 조회")
   @GetMapping("/{id}/chart")
-  public ResponseEntity<List<IndexChartDto>> getChartData(
+  public ResponseEntity<IndexChartDto> getChartData(
       @PathVariable Long id,
       @RequestParam(defaultValue = "DAILY") PeriodType periodType) {
     return ResponseEntity.ok(indexDataService.getChartData(id, periodType));
