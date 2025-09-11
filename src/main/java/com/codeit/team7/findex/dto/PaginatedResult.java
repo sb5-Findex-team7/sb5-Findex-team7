@@ -1,6 +1,5 @@
 package com.codeit.team7.findex.dto;
 
-
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

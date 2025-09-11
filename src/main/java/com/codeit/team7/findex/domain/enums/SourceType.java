@@ -1,5 +1,12 @@
 package com.codeit.team7.findex.domain.enums;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum SourceType {
-  OPEN_API, USER
+  USER,
+  OPEN_API
 }
+
