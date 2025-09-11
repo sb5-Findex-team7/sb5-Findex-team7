@@ -1,4 +1,4 @@
-package com.codeit.team7.findex.dto.command;
+package com.codeit.team7.findex.dto.response;
 
 import com.codeit.team7.findex.domain.entity.IndexInfo;
 

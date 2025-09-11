@@ -1,6 +1,7 @@
 package com.codeit.team7.findex.domain.entity;
 
 import com.codeit.team7.findex.domain.entity.base.BaseUpdatableEntity;
+import com.codeit.team7.findex.domain.enums.SourceType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -36,7 +37,7 @@ public class IndexInfo extends BaseUpdatableEntity {
   @Column(nullable = false, name = "bas_pntm")
   private LocalDate basePointInTime;
 
-  @Column(nullable = false, name = "bas_idx")
+  @Column(nullable = false, name = "bas_idx", precision = 32, scale = 2)
   private BigDecimal baseIndex;
 
   @Enumerated(EnumType.STRING)

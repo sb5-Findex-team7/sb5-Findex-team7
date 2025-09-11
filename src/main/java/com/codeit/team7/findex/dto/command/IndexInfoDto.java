@@ -1,7 +1,7 @@
 package com.codeit.team7.findex.dto.command;
 
 import com.codeit.team7.findex.domain.entity.IndexInfo;
-import com.codeit.team7.findex.domain.entity.SourceType;
+import com.codeit.team7.findex.domain.enums.SourceType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
