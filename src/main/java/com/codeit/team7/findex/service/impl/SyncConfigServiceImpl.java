@@ -76,7 +76,7 @@ public class SyncConfigServiceImpl implements SyncConfigService {
       if (sortedField == SyncConfigSoredField.indexName) {
         nextCursor = lastData.getIndexName();
       } else { // enabled
-        nextCursor = lastData.getEnabled().toString();
+        nextCursor = Boolean.TRUE.toString();
 
       }
       nextIdAfter = lastData.getId();

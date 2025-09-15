@@ -9,6 +9,7 @@ import com.codeit.team7.findex.dto.request.IndexInfoUpdateRequest;
 import com.codeit.team7.findex.dto.response.IndexInfoSummaryDto;
 import com.codeit.team7.findex.repository.IndexInfoRepository;
 import com.codeit.team7.findex.service.IndexInfoService;
+import com.codeit.team7.findex.util.CacheUtil;
 import jakarta.transaction.Transactional;
 import java.util.Base64;
 import java.util.List;
@@ -33,7 +34,8 @@ public class IndexInfoServiceImpl implements IndexInfoService {
   @Override
   public IndexInfoDto findById(Long id) {
     IndexInfo indexInfo = indexInfoRepository.findById(id)
-        .orElseThrow(() -> new NoSuchElementException("IndexInfo with id " + id + " not found"));
+                                             .orElseThrow(() -> new NoSuchElementException(
+                                                 "IndexInfo with id " + id + " not found"));
     return IndexInfoDto.fromEntity(indexInfo);
   }
 
@@ -41,8 +43,12 @@ public class IndexInfoServiceImpl implements IndexInfoService {
   @Override
   public IndexInfoDto update(Long id, IndexInfoUpdateRequest request) {
     IndexInfo indexInfo = indexInfoRepository.findById(id)
-        .orElseThrow(() -> new NoSuchElementException("IndexInfo with id " + id + " not found"));
-    boolean newFavorite = request.favorite() != null ? request.favorite() : indexInfo.isFavorite();
+                                             .orElseThrow(() -> new NoSuchElementException(
+                                                 "IndexInfo with id " + id + " not found"));
+    boolean newFavorite = request.favorite() != null ? request.favorite() : indexInfo.getFavorite();
+    if (indexInfo.getFavorite() != newFavorite) {
+      CacheUtil.clearFavoritePerformance();
+    }
     indexInfo.update(request.employedItemsCount(), request.basePointInTime(), request.baseIndex(),
         newFavorite);
     return IndexInfoDto.fromEntity(indexInfo);
@@ -60,7 +66,9 @@ public class IndexInfoServiceImpl implements IndexInfoService {
   @Override
   public List<IndexInfoSummaryDto> findAllSummaries() {
     List<IndexInfo> indexInfos = indexInfoRepository.findAll();
-    return indexInfos.stream().map(IndexInfoSummaryDto::fromEntity).toList();
+    return indexInfos.stream()
+                     .map(IndexInfoSummaryDto::fromEntity)
+                     .toList();
   }
 
   @Override
@@ -73,7 +81,8 @@ public class IndexInfoServiceImpl implements IndexInfoService {
 
     if (cursor != null && !cursor.isBlank()) {
       try {
-        String decoded = new String(Base64.getDecoder().decode(cursor));
+        String decoded = new String(Base64.getDecoder()
+                                          .decode(cursor));
         String[] parts = decoded.split("_");
         if (parts.length == 2) {
           lastSortValue = "null".equals(parts[0]) ? null : parts[0];
@@ -89,22 +98,27 @@ public class IndexInfoServiceImpl implements IndexInfoService {
         sortDirection, lastSortValue, lastId, size
     );
 
-    List<IndexInfoDto> dtoList = result.getContent().stream()
-        .map(IndexInfoDto::fromEntity)
-        .toList();
+    List<IndexInfoDto> dtoList = result.getContent()
+                                       .stream()
+                                       .map(IndexInfoDto::fromEntity)
+                                       .toList();
 
     String nextCursor = null;
     Long nextIdAfter = null;
     if (!dtoList.isEmpty() && result.getHasNext()) {
-      IndexInfo last = result.getContent().get(result.getContent().size() - 1);
+      IndexInfo last = result.getContent()
+                             .get(result.getContent()
+                                        .size() - 1);
       String sortValue = switch (sortField == null ? "indexClassification" : sortField) {
         case "indexName" -> last.getIndexName();
-        case "employedItemsCount" ->
-            last.getItemCount() == null ? null : last.getItemCount().toString();
+        case "employedItemsCount" -> last.getItemCount() == null ? null : last.getItemCount()
+                                                                              .toString();
         default -> last.getIndexClassification();
       };
-      nextCursor = Base64.getEncoder().encodeToString(
-          ((sortValue == null ? "null" : sortValue) + "_" + last.getId()).getBytes());
+      nextCursor = Base64.getEncoder()
+                         .encodeToString(
+                             ((sortValue == null ? "null" : sortValue) + "_"
+                              + last.getId()).getBytes());
       nextIdAfter = last.getId();
     }
 
