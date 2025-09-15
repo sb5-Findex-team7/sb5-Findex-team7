@@ -41,8 +41,6 @@ public class SyncJobController {
   private final OpenApiService openApiService;
   private final LinkIndexInfoService linkIndexInfoService;
 
-  // http://localhost:8080/api/sync-jobs?size=0&sortField=jobTime&sortDirection=desc
-  //size=20&baseDateFrom=2025-09-10&sortField=jobTime&sortDirection=desc
   @GetMapping
   public ResponseEntity<CursorPageResponseSyncJobResponse> getSyncJobs(
       @RequestParam(required = false) JobType jobType,

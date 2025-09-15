@@ -16,7 +16,6 @@ import com.codeit.team7.findex.service.IndexDataService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,11 +36,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 
-@Tag(name = "Index Data", description = "지수 데이터 API")
 @RestController
 @RequestMapping("/api/index-data")
 @RequiredArgsConstructor
-@Tag(name = "지수 데이터 API", description = "지수 데이터 관리 API")
 public class IndexDataController {
 
   private final IndexDataService indexDataService;
