@@ -5,6 +5,7 @@ import com.codeit.team7.findex.domain.enums.SourceType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+
 public record IndexInfoDto(
     Long id,
     String indexClassification,
@@ -17,6 +18,9 @@ public record IndexInfoDto(
 ) {
 
   public static IndexInfoDto fromEntity(IndexInfo entity) {
+
+    System.out.println("fromEntity: " + entity.getSourceType());
+
     return new IndexInfoDto(
         entity.getId(),
         entity.getIndexClassification(),
@@ -24,8 +28,8 @@ public record IndexInfoDto(
         entity.getItemCount(),
         entity.getBasePointInTime(),
         entity.getBaseIndex(),
-        entity.getSourceType(),
-        entity.isFavorite()
+        SourceType.valueOf(entity.getSourceType()),
+        entity.getFavorite()
     );
   }
 }

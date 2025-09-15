@@ -122,7 +122,7 @@ public class OpenApiServiceImpl implements OpenApiService {
         getNewIndexInfosByRequest(StockMarketIndexRequest.builder()
             .beginBasDt(baseFromDate.format(BASIC_ISO_DATE))
             .endBasDt(baseToDate.format(BASIC_ISO_DATE))
-            .idxNm(indexName).build())
+            .idxNm(indexName).numOfRows(500).build())
     ).flatMap(List::stream).toList();
 
     Map<Long, List<Item>> IndexInfoId2items = indexInfos.stream()

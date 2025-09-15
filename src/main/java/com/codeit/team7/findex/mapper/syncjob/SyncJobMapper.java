@@ -24,7 +24,7 @@ public interface SyncJobMapper {
 
   CursorPageResponseSyncJobResponse toCursorPageResponse(CursorPageResponseSyncJobDto dto);
 
-  CursorPageResponseSyncJobDto toCursorPageResponse(Slice<SyncJobDto> slice);
+//  CursorPageResponseSyncJobDto toCursorPageResponse(Slice<SyncJobDto> slice);
 
   GetNewIndexDataCommand toCommand(LinkIndexDataRequest request);
 

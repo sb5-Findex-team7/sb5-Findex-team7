@@ -15,15 +15,16 @@ public record IndexInfoCreateRequest(
 ) {
 
   public IndexInfo toEntity() {
-    return new IndexInfo(
-        indexClassification,
-        indexName,
-        employedItemsCount,
-        basePointInTime,
-        baseIndex,
-        SourceType.USER,
-        favorite != null && favorite,
-        true
-    );
+
+    return IndexInfo.builder()
+                    .indexClassification(indexClassification)
+                    .indexName(indexName)
+                    .itemCount(employedItemsCount)
+                    .basePointInTime(basePointInTime)
+                    .baseIndex(baseIndex)
+                    .sourceType(SourceType.USER.name())
+                    .favorite(favorite != null && favorite)
+                    .enabled(true)
+                    .build();
   }
 }

@@ -1,6 +1,5 @@
 package com.codeit.team7.findex.dto;
 
-
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -11,7 +10,6 @@ import lombok.Getter;
 @Getter
 @Builder
 public class CursorPageResponseSyncJobDto {
-
 
   private final List<SyncJobDto> content;
   private final LocalDateTime nextCursor;

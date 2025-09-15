@@ -48,9 +48,11 @@ public class IndexInfoQueryRepositoryImpl implements IndexInfoQueryRepository {
             where.and(
                 ascending
                     ? indexInfo.indexName.gt(lastSortValue)
-                    .or(indexInfo.indexName.eq(lastSortValue).and(indexInfo.id.gt(lastId)))
+                                         .or(indexInfo.indexName.eq(lastSortValue)
+                                                                .and(indexInfo.id.gt(lastId)))
                     : indexInfo.indexName.lt(lastSortValue)
-                        .or(indexInfo.indexName.eq(lastSortValue).and(indexInfo.id.lt(lastId)))
+                                         .or(indexInfo.indexName.eq(lastSortValue)
+                                                                .and(indexInfo.id.lt(lastId)))
             );
           } else {
             where.and(ascending ? indexInfo.id.gt(lastId) : indexInfo.id.lt(lastId));
@@ -69,9 +71,11 @@ public class IndexInfoQueryRepositoryImpl implements IndexInfoQueryRepository {
             where.and(
                 ascending
                     ? indexInfo.itemCount.gt(lastItemCount)
-                    .or(indexInfo.itemCount.eq(lastItemCount).and(indexInfo.id.gt(lastId)))
+                                         .or(indexInfo.itemCount.eq(lastItemCount)
+                                                                .and(indexInfo.id.gt(lastId)))
                     : indexInfo.itemCount.lt(lastItemCount)
-                        .or(indexInfo.itemCount.eq(lastItemCount).and(indexInfo.id.lt(lastId)))
+                                         .or(indexInfo.itemCount.eq(lastItemCount)
+                                                                .and(indexInfo.id.lt(lastId)))
             );
           } else {
             where.and(ascending ? indexInfo.id.gt(lastId) : indexInfo.id.lt(lastId));
@@ -82,11 +86,17 @@ public class IndexInfoQueryRepositoryImpl implements IndexInfoQueryRepository {
             where.and(
                 ascending
                     ? indexInfo.indexClassification.gt(lastSortValue)
-                    .or(indexInfo.indexClassification.eq(lastSortValue)
-                        .and(indexInfo.id.gt(lastId)))
+                                                   .or(indexInfo.indexClassification.eq(
+                                                                    lastSortValue)
+                                                                                    .and(
+                                                                                        indexInfo.id.gt(
+                                                                                            lastId)))
                     : indexInfo.indexClassification.lt(lastSortValue)
-                        .or(indexInfo.indexClassification.eq(lastSortValue)
-                            .and(indexInfo.id.lt(lastId)))
+                                                   .or(indexInfo.indexClassification.eq(
+                                                                    lastSortValue)
+                                                                                    .and(
+                                                                                        indexInfo.id.lt(
+                                                                                            lastId)))
             );
           } else {
             where.and(ascending ? indexInfo.id.gt(lastId) : indexInfo.id.lt(lastId));
@@ -129,6 +139,10 @@ public class IndexInfoQueryRepositoryImpl implements IndexInfoQueryRepository {
 
     long totalElements = (total == null) ? 0L : total;
 
-    return new PaginatedResult<>(rows, totalElements, hasNext);
+    return PaginatedResult.<IndexInfo>builder()
+                          .content(rows)
+                          .totalElements(totalElements)
+                          .hasNext(hasNext)
+                          .build();
   }
 }

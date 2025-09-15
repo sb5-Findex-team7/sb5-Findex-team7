@@ -17,6 +17,7 @@ import com.codeit.team7.findex.service.LinkIndexInfoService;
 import com.codeit.team7.findex.service.OpenApiService;
 import com.codeit.team7.findex.service.SyncJobService;
 import jakarta.servlet.http.HttpServletRequest;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -44,8 +45,8 @@ public class SyncJobController {
   public ResponseEntity<CursorPageResponseSyncJobResponse> getSyncJobs(
       @RequestParam(required = false) JobType jobType,
       @RequestParam(required = false) Long indexInfoId,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime baseDateFrom,
-      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime baseDateTo,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate baseDateFrom,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDate baseDateTo,
       @RequestParam(required = false) String worker,
       @RequestParam(required = false) LocalDateTime jobTimeFrom,
       @RequestParam(required = false) LocalDateTime jobTimeTo,
@@ -63,10 +64,8 @@ public class SyncJobController {
             .indexInfoId(indexInfoId)
             .baseDateFrom(
                 Optional.ofNullable(baseDateFrom)
-                    .map(LocalDateTime::toLocalDate)
                     .orElse(null))
             .baseDateTo(Optional.ofNullable(baseDateTo)
-                .map(LocalDateTime::toLocalDate)
                 .orElse(null))
             .worker(worker)
             .jobTimeFrom(jobTimeFrom)
@@ -76,7 +75,7 @@ public class SyncJobController {
             .cursor(cursor)
             .sortField(sortField)
             .sortDirection(sortDirection)
-            .size(size)
+            .size(size <= 0 ? 10 : size)
             .build());
 
     return ResponseEntity.ok(syncJobMapper.toCursorPageResponse(syncJobDtos));
@@ -87,10 +86,14 @@ public class SyncJobController {
     String ip = getClientIp(request);
 
     List<SyncJobDto> syncJobDtos = linkIndexInfoService.LinkIndexInfos(
-        LinkIndexInfosDto.builder().ip(ip).build());
+        LinkIndexInfosDto.builder()
+            .ip(ip)
+            .build());
 
     return ResponseEntity.status(202)
-        .body(syncJobDtos.stream().map(syncJobMapper::toResponse).toList());
+        .body(syncJobDtos.stream()
+            .map(syncJobMapper::toResponse)
+            .toList());
   }
 
   @PostMapping("/index-data")
@@ -106,7 +109,9 @@ public class SyncJobController {
         linkIndexInfoService.LinkIndexData(syncJobMapper.toDto(result, ip));
 
     return ResponseEntity.status(202)
-        .body(syncJobDtos.stream().map(syncJobMapper::toResponse).toList());
+        .body(syncJobDtos.stream()
+            .map(syncJobMapper::toResponse)
+            .toList());
 
   }
 

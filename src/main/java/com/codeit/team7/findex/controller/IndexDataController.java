@@ -3,21 +3,26 @@ package com.codeit.team7.findex.controller;
 
 import com.codeit.team7.findex.domain.enums.IndexDataSortDirection;
 import com.codeit.team7.findex.domain.enums.IndexDataSortField;
+import com.codeit.team7.findex.domain.enums.PeriodType;
 import com.codeit.team7.findex.dto.IndexDataScrollRequest;
+import com.codeit.team7.findex.dto.command.ExportCsvCommand;
 import com.codeit.team7.findex.dto.command.IndexDataDto;
 import com.codeit.team7.findex.dto.request.IndexDataCreateRequest;
 import com.codeit.team7.findex.dto.request.IndexDataUpdateRequest;
 import com.codeit.team7.findex.dto.response.CursorPageResponseIndexDataDto;
+import com.codeit.team7.findex.dto.response.IndexChartDto;
+import com.codeit.team7.findex.dto.response.IndexPerformanceRankDto;
 import com.codeit.team7.findex.service.IndexDataService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,12 +35,38 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+
 @RestController
 @RequestMapping("/api/index-data")
 @RequiredArgsConstructor
-@Tag(name = "지수 데이터 API", description = "지수 데이터 관리 API")
 public class IndexDataController {
+
   private final IndexDataService indexDataService;
+
+//  @GetMapping
+//  public ResponseEntity<PaginatedResult<IndexDataDto>> getIndexData(
+//      @RequestParam(required = false) Long indexInfoId,
+//      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+//      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+//      @RequestParam(required = false) Long idAfter,
+//      @RequestParam(required = false) String cursor,
+//      @RequestParam(defaultValue = "baseDate") String sortField,
+//      @RequestParam(defaultValue = "desc") String sortDirection,
+//      @RequestParam(defaultValue = "10") int size
+//  ) {
+//    IndexDataQueryCommand command = IndexDataQueryCommand.builder()
+//                                                         .indexInfoId(indexInfoId)
+//                                                         .startDate(startDate)
+//                                                         .endDate(endDate)
+//                                                         .idAfter(idAfter)
+//                                                         .cursor(cursor)
+//                                                         .sortField(sortField)
+//                                                         .sortDirection(sortDirection)
+//                                                         .size(size)
+//                                                         .build();
+//
+//    return ResponseEntity.ok(indexDataService.getIndexDataList(command));
+//  }
 
 
   @GetMapping
@@ -52,31 +83,48 @@ public class IndexDataController {
       @Parameter(description = "커서 (다음 페이지 시작점)")
       @RequestParam(required = false) String cursor,
       @Parameter(schema = @Schema(type = "string", defaultValue = "baseDate"),
-      description = "정렬 필드 (baseDate, marketPrice, closingPrice, highPrice, lowPrice, versus, fluctuationRate, tradingQuantity, tradingPrice, marketTotalAmount)")
+          description = "정렬 필드 (baseDate, marketPrice, closingPrice, highPrice, lowPrice, versus, fluctuationRate, tradingQuantity, tradingPrice, marketTotalAmount)")
       @RequestParam(required = false) IndexDataSortField sortField,
       @Parameter(schema = @Schema(type = "string", defaultValue = "desc"), description = "정렬 방향 (asc, desc)")
       @RequestParam(required = false) IndexDataSortDirection sortDirection,
       @Schema(defaultValue = "10", description = "페이지 크기")
       @RequestParam(required = false) Integer size) {
     int realSize = Optional.ofNullable(size)
-        .filter(s -> s > 0)
-        .orElse(10);
+                           .filter(s -> s > 0)
+                           .orElse(10);
 
     LocalDateTime startTime = (startDate != null) ? startDate.atStartOfDay() : null;
     LocalDateTime endTime = (endDate != null) ? endDate.atStartOfDay() : null;
 
     CursorPageResponseIndexDataDto res = indexDataService.getIndexData(
         IndexDataScrollRequest.builder()
-            .indexInfoId(indexInfoId)
-            .startTime(startTime)
-            .endTime(endTime)
-            .idAfter(idAfter)
-            .sortField(sortField)
-            .sortDirection(sortDirection)
-            .size(realSize)
-            .build()
+                              .indexInfoId(indexInfoId)
+                              .startTime(startTime)
+                              .endTime(endTime)
+                              .idAfter(idAfter)
+                              .sortField(sortField)
+                              .sortDirection(sortDirection)
+                              .size(realSize)
+                              .build()
     );
     return ResponseEntity.ok(res);
+  }
+
+  @Operation(summary = "차트 데이터 조회")
+  @GetMapping("/{id}/chart")
+  public ResponseEntity<IndexChartDto> getChartData(
+      @PathVariable Long id,
+      @RequestParam(defaultValue = "DAILY") PeriodType periodType) {
+    return ResponseEntity.ok(indexDataService.getChartData(id, periodType));
+  }
+
+  @Operation(summary = "성과 랭킹 조회")
+  @GetMapping("/performance/rank")
+  public ResponseEntity<List<IndexPerformanceRankDto>> getPerformanceRank(
+      @RequestParam(defaultValue = "WEEKLY") PeriodType periodType,
+      @RequestParam(defaultValue = "10") int limit) {
+
+    return ResponseEntity.ok(indexDataService.getPerformanceRank(periodType, limit));
   }
 
   @PostMapping
@@ -108,4 +156,30 @@ public class IndexDataController {
         .build();
   }
 
+  @Operation(summary = "즐겨찾기 지수 성과 조회")
+  @GetMapping("/performance/favorite")
+  public ResponseEntity<List<IndexPerformanceRankDto.IndexPerformanceDto>> getFavoritePerformance(
+      @RequestParam(defaultValue = "WEEKLY") PeriodType periodType) {
+    return ResponseEntity.ok(indexDataService.getFavoritePerformance(periodType));
+  }
+
+  @Operation(summary = "CSV 다운로드")
+  @GetMapping("/export/csv")
+  public ResponseEntity<byte[]> exportCsv(
+      @RequestParam(required = false) Long indexInfoId,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+      @RequestParam(required = false, defaultValue = "baseDate") String sortField,
+      @RequestParam(required = false, defaultValue = "desc") String sortDirection) {
+
+    ExportCsvCommand command = ExportCsvCommand.builder()
+                                               .indexInfoId(indexInfoId)
+                                               .startDate(startDate)
+                                               .endDate(endDate)
+                                               .sortField(sortField)
+                                               .sortDirection(sortDirection)
+                                               .build();
+
+    return indexDataService.exportCsv(command);
+  }
 }
