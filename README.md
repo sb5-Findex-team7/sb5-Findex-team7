@@ -7,7 +7,16 @@
 - 준희 (https://github.com/Jelo777)
 
 ## 프로젝트 소개
-
+💹 한눈에 보는 금융 지수 데이터!
+Findex는 외부 Open API와 연동하여 금융 지수 데이터를 제공하는 대시보드 서비스입니다.
+사용자는 직관적인 UI에서 금융 지수의 흐름을 파악하고, 자동 연동 기능을 통해 최신 데이터를 분석할 수 있습니다. 지수별 성과 분석, 이동평균선 계산, 자동 데이터 업데이트 기능을 통해 가볍고 강력한 금융 분석 도구
+## 기술 스택
+![SpringBoot](https://img.shields.io/badge/SpringBoot-6DB33F?style=for-the-badge&logo=springboot&logoColor=white)
+![Java](https://img.shields.io/badge/Java-007396?style=for-the-badge&logo=openjdk&logoColor=white)
+![Data JPA](https://img.shields.io/badge/Data%20JPA-59666C?style=for-the-badge&logo=hibernate&logoColor=white)
+![QueryDSL](https://img.shields.io/badge/QueryDSL-0088CC?style=for-the-badge&logo=databricks&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![IntelliJ IDEA](https://img.shields.io/badge/IntelliJIDEA-000000?style=for-the-badge&logo=intellijidea&logoColor=white)
 ## 파일구조
 ```markdown
 ├── 📂 batch
@@ -150,3 +159,5 @@
 │
 ├── FindexApplication.java
 ```
+## 구현홈페이지
+https://sb5-findex-team7-production.up.railway.app/#/dashboard
