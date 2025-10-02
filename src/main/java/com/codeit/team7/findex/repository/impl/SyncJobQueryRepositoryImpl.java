@@ -197,8 +197,6 @@ public class SyncJobQueryRepositoryImpl implements
       order = direction.equals(desc) ? sj.jobTime.desc() : sj.jobTime.asc(); // default 는 jobTime
     }
 
-    System.out.println("offset : " + (long) pageNum * size);
-
     List<SyncJob> contents = queryFactory.selectFrom(sj)
         .where(where)
         .join(sj.indexInfo).fetchJoin()
