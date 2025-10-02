@@ -5,8 +5,10 @@ import static com.codeit.team7.findex.domain.enums.JobStatus.SUCCESS;
 import com.codeit.team7.findex.domain.entity.SyncJob;
 import com.codeit.team7.findex.domain.enums.SyncJobSortedField;
 import com.codeit.team7.findex.dto.CursorPageResponseSyncJobDto;
+import com.codeit.team7.findex.dto.PageResponseSyncJobDto;
 import com.codeit.team7.findex.dto.PaginatedResult;
 import com.codeit.team7.findex.dto.SyncJobDto;
+import com.codeit.team7.findex.dto.command.GetSyncJobByOffsetCommand;
 import com.codeit.team7.findex.dto.command.GetSyncJobCommand;
 import com.codeit.team7.findex.mapper.syncjob.SyncJobMapper;
 import com.codeit.team7.findex.repository.SyncJobRepository;
@@ -83,6 +85,42 @@ public class SyncJobServiceImpl implements SyncJobService {
         .size(content.size())
         .totalElements(syncJobs.getTotalElements()) // Slice는 totalElements 없을 수도 있음, 직접 계산 필요
         .hasNext(syncJobs.getHasNext())
+        .build();
+  }
+
+  @Override
+  public PageResponseSyncJobDto getSyncJobListByOffset(
+      GetSyncJobByOffsetCommand getSyncJobByOffsetCommand) {
+    Boolean status = getSyncJobByOffsetCommand.getStatus() == null ? null :
+        getSyncJobByOffsetCommand.getStatus() == SUCCESS;
+
+    int pageSize = getSyncJobByOffsetCommand.getSize();
+    int pageNum = getSyncJobByOffsetCommand.getPageNum();
+
+    PaginatedResult<SyncJob> syncJobs = syncJobRepository.searchSyncJobByOffset(
+        getSyncJobByOffsetCommand.getJobType(),
+        getSyncJobByOffsetCommand.getIndexInfoId(),
+        getSyncJobByOffsetCommand.getBaseDateFrom(),
+        getSyncJobByOffsetCommand.getBaseDateTo(),
+        getSyncJobByOffsetCommand.getWorker(),
+        getSyncJobByOffsetCommand.getJobTimeFrom(),
+        getSyncJobByOffsetCommand.getJobTimeTo(),
+        status,
+        getSyncJobByOffsetCommand.getSortField(),
+        getSyncJobByOffsetCommand.getSortDirection(),
+        pageSize,
+        pageNum
+    );
+
+    List<SyncJobDto> content = syncJobs.getContent().stream()
+        .map(SyncJobDto::new)
+        .toList();
+
+    return PageResponseSyncJobDto.builder()
+        .content(content)
+        .size(pageSize)
+        .totalPages(syncJobs.getTotalElements() / pageSize)
+        .pageNum(pageNum)
         .build();
   }
 }

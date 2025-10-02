@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: findex
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/findex
+    username: findex_user
+    password: findex1234
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        physical_naming_strategy: org.hibernate.boot.model.naming.CamelCaseToUnderscoresNamingStrategy
+        jdbc.time_zone: UTC
+  openapi:
+    base_url: https://apis.data.go.kr
+    result_type: json
+    service_key: 4daecd572c3bf86f7016a54b0c7779d23ef08ae92ae037535312f3b45e846500 # 공공데이터 secret key

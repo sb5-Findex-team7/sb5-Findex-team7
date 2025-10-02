@@ -20,7 +20,6 @@ public class StockDateUtil {
    */
   public LocalDate getLatestDate() {
     LocalDate today = LocalDate.now(KST);
-
     if (isMarketOpen()) {
       // 장이 열려 있다면: 오늘은 미완성 → 어제 평일 반환
       return getPreviousWeekday(today);

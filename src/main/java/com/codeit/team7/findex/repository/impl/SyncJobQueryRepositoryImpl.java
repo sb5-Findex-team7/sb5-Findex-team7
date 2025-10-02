@@ -137,4 +137,87 @@ public class SyncJobQueryRepositoryImpl implements
         .build();
 
   }
+
+  @Override
+  public PaginatedResult<SyncJob> searchSyncJobByOffset(JobType jobType,
+      Long indexInfoId,
+      LocalDate baseDateFrom,
+      LocalDate baseDateTo,
+      String worker,
+      LocalDateTime jobTimeFrom,
+      LocalDateTime jobTimeTo,
+      Boolean status,
+      SyncJobSortedField sortField,
+      SortedDirection sortDirection,
+      int size,
+      int pageNum) {
+
+    // 1. where 조건 빌드
+    BooleanBuilder where = new BooleanBuilder();
+
+    if (jobType != null) {
+      where.and(sj.jobType.eq(jobType.toString()));
+    }
+    if (indexInfoId != null) {
+      where.and(sj.indexInfo.id.eq(indexInfoId));
+    }
+    if (baseDateFrom != null) {
+      where.and(sj.targetDate.goe(baseDateFrom));
+    }
+    if (baseDateTo != null) {
+      where.and(sj.targetDate.loe(baseDateTo));
+    }
+    if (worker != null && !worker.isBlank()) {
+      where.and(sj.worker.eq(worker));
+    }
+    if (jobTimeFrom != null) {
+      where.and(sj.jobTime.goe(jobTimeFrom.atZone(ZoneId.systemDefault()).toInstant()));
+    }
+    if (jobTimeTo != null) {
+      where.and(sj.jobTime.loe(jobTimeTo.atZone(ZoneId.systemDefault()).toInstant()));
+    }
+    if (status != null) {
+      where.and(sj.isCompleted.eq(status));
+    }
+
+    // 2. 페이지 네이션
+    OrderSpecifier<?> order;
+    // 2-1 정렬 조건 GET
+    SyncJobSortedField sortedField = Optional.ofNullable(sortField)
+        .orElse(SyncJobSortedField.id);
+
+    SortedDirection direction = Optional.ofNullable(sortDirection)
+        .orElse(desc);
+
+    if (sortedField.equals(jobTime)) {
+      order = direction.equals(desc) ? sj.jobTime.desc() : sj.jobTime.asc();
+    } else if (sortedField == SyncJobSortedField.targetDate) {
+      order = direction.equals(desc) ? sj.targetDate.desc() : sj.targetDate.asc();
+    } else {
+      order = direction.equals(desc) ? sj.jobTime.desc() : sj.jobTime.asc(); // default 는 jobTime
+    }
+
+    System.out.println("offset : " + (long) pageNum * size);
+
+    List<SyncJob> contents = queryFactory.selectFrom(sj)
+        .where(where)
+        .join(sj.indexInfo).fetchJoin()
+        .orderBy(order)
+        .offset((long) pageNum * size)
+        .limit(size)
+        .fetch();
+
+    Long total = Optional.ofNullable(queryFactory
+        .select(sj.id.countDistinct())
+        .from(sj)
+        .where(where)
+        .fetchOne()).orElse(0L);
+
+    return PaginatedResult.<SyncJob>builder()
+        .content(contents)
+        .totalElements(total)
+        .hasNext(total > size)
+        .build();
+
+  }
 }

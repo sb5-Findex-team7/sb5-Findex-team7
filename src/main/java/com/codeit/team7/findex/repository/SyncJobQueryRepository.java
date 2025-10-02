@@ -25,4 +25,20 @@ public interface SyncJobQueryRepository {
       , SortedDirection sortDirection
       , int size);
 
+  PaginatedResult<SyncJob> searchSyncJobByOffset(
+      JobType jobType
+      , Long indexInfoId
+      , LocalDate baseDateFrom
+      , LocalDate baseDateTo
+      , String worker
+      , LocalDateTime jobTimeFrom
+      , LocalDateTime jobTimeTo
+      , Boolean status // 작업 상태 (SUCCESS, FAILED)
+      , SyncJobSortedField sortField
+      , SortedDirection sortDirection
+      , int size
+      , int pageNum
+
+  );
+
 }

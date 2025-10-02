@@ -68,10 +68,12 @@ public class BatchIndexInfoServiceImpl implements SyncIndexInfoService {
           targetDate.format(ISO_DATE) + "날의 신규 데이터가 Open API 에서 조회되지 않았습니다");
     }
     // API 호출 결과 Map
+    Instant startAPI = Instant.now();
     Map<String, Item> newDataMap = getNewIndexInfosByBaseDate(targetDate)
         .stream().collect(Collectors.toMap(
             item -> item.getIndexName() + item.getIndexClassification(), Function.identity()
         ));
+    Instant endAPI = Instant.now();
 
     newDataMap.keySet().forEach(
         k -> {
@@ -118,6 +120,7 @@ public class BatchIndexInfoServiceImpl implements SyncIndexInfoService {
 
     ).toList();
     syncJobRepository.saveAll(newSyncJobs);
+
 
   }
 
