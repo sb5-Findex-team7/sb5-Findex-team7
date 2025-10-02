@@ -54,7 +54,7 @@ SELECT
     (now() - '3 years'::interval)
         + (random() * (EXTRACT(EPOCH FROM interval '3 years')) * interval '1 second') AS updated_at
 
-FROM generate_series(1, 10000) g;
+FROM generate_series(1, 100000) g;
 
 
 truncate sync_job

@@ -79,6 +79,8 @@ CREATE TABLE sync_job
         ON DELETE CASCADE
 );
 
+CREATE INDEX idx_sync_job_job_time ON sync_job (job_time);
+
 -- 1) 부모 지수 1건 생성 (id는 IDENTITY 이므로 지정하지 않음)
 -- WITH idx AS (
 --     INSERT INTO public.index_info (
