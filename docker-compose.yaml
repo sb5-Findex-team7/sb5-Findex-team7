@@ -1,0 +1,9 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_PASSWORD: findex1234
+      POSTGRES_USER: findex_user
+      POSTGRES_DB: findex
+    ports:
+      - "5432:5432"
