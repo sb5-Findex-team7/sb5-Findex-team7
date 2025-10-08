@@ -35,10 +35,34 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/index-data")
 @RequiredArgsConstructor
-@Tag(name = "지수 데이터 API", description = "지수 데이터 관리 API")
 public class IndexDataController {
 
   private final IndexDataService indexDataService;
+
+//  @GetMapping
+//  public ResponseEntity<PaginatedResult<IndexDataDto>> getIndexData(
+//      @RequestParam(required = false) Long indexInfoId,
+//      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+//      @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+//      @RequestParam(required = false) Long idAfter,
+//      @RequestParam(required = false) String cursor,
+//      @RequestParam(defaultValue = "baseDate") String sortField,
+//      @RequestParam(defaultValue = "desc") String sortDirection,
+//      @RequestParam(defaultValue = "10") int size
+//  ) {
+//    IndexDataQueryCommand command = IndexDataQueryCommand.builder()
+//                                                         .indexInfoId(indexInfoId)
+//                                                         .startDate(startDate)
+//                                                         .endDate(endDate)
+//                                                         .idAfter(idAfter)
+//                                                         .cursor(cursor)
+//                                                         .sortField(sortField)
+//                                                         .sortDirection(sortDirection)
+//                                                         .size(size)
+//                                                         .build();
+//
+//    return ResponseEntity.ok(indexDataService.getIndexDataList(command));
+//  }
 
 
   @GetMapping
@@ -48,23 +72,25 @@ public class IndexDataController {
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
       @RequestParam(required = false) Long idAfter,
       @RequestParam(required = false) String cursor,
+
       @RequestParam(defaultValue = "baseDate") String sortField,
       @RequestParam(defaultValue = "desc") String sortDirection,
       @RequestParam(defaultValue = "10") int size
   ) {
     IndexDataQueryCommand command = IndexDataQueryCommand.builder()
-                                                         .indexInfoId(indexInfoId)
-                                                         .startDate(startDate)
-                                                         .endDate(endDate)
-                                                         .idAfter(idAfter)
-                                                         .cursor(cursor)
-                                                         .sortField(sortField)
-                                                         .sortDirection(sortDirection)
-                                                         .size(size)
-                                                         .build();
+        .indexInfoId(indexInfoId)
+        .startDate(startDate)
+        .endDate(endDate)
+        .idAfter(idAfter)
+        .cursor(cursor)
+        .sortField(sortField)
+        .sortDirection(sortDirection)
+        .size(size)
+        .build();
 
     return ResponseEntity.ok(indexDataService.getIndexDataList(command));
   }
+
 
   @Operation(summary = "차트 데이터 조회")
   @GetMapping("/{id}/chart")
@@ -129,12 +155,12 @@ public class IndexDataController {
       @RequestParam(required = false, defaultValue = "desc") String sortDirection) {
 
     ExportCsvCommand command = ExportCsvCommand.builder()
-                                               .indexInfoId(indexInfoId)
-                                               .startDate(startDate)
-                                               .endDate(endDate)
-                                               .sortField(sortField)
-                                               .sortDirection(sortDirection)
-                                               .build();
+        .indexInfoId(indexInfoId)
+        .startDate(startDate)
+        .endDate(endDate)
+        .sortField(sortField)
+        .sortDirection(sortDirection)
+        .build();
 
     return indexDataService.exportCsv(command);
   }
